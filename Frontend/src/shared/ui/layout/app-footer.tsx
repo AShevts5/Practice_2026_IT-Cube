@@ -1,7 +1,7 @@
 export function AppFooter() {
   return (
-    <footer className="mt-8 bg-[#010327] px-4 py-6">
-      <div className="mx-auto max-w-7xl text-left text-sm text-slate-300">
+    <footer className="border-border/30 bg-background/70 mt-8 border-t px-4 py-4 backdrop-blur-md">
+      <div className="text-muted-foreground mx-auto max-w-7xl text-center text-sm">
         © Команда «Пламенный свет», 2026
       </div>
     </footer>
