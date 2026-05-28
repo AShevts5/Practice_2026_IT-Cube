@@ -1,0 +1,195 @@
+schemas:
+  User:
+    type: object
+    required:
+      - id
+      - email
+      - role
+    properties:
+      id:
+        type: string
+      email:
+        type: string
+        format: email
+      role:
+        type: string
+        enum: [team, admin]
+
+  LoginRequest:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        format: password
+
+  RegisterRequest:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        format: password
+
+  AuthResponse:
+    type: object
+    required:
+      - accessToken
+      - user
+    properties:
+      accessToken:
+        type: string
+      user:
+        $ref: '#/schemas/User'
+
+  Login2FAResponse:
+    type: object
+    required:
+      - tempToken
+      - requires2fa
+    properties:
+      tempToken:
+        type: string
+      requires2fa:
+        type: boolean
+
+  Verify2FARequest:
+    type: object
+    required:
+      - code
+      - tempToken
+    properties:
+      code:
+        type: string
+      tempToken:
+        type: string
+
+  ForgotPasswordRequest:
+    type: object
+    required:
+      - email
+    properties:
+      email:
+        type: string
+        format: email
+
+  ResetPasswordRequest:
+    type: object
+    required:
+      - password
+    properties:
+      password:
+        type: string
+
+login:
+  summary: Login user
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/LoginRequest'
+  responses:
+    '200':
+      description: Login step 1 — temp token for 2FA
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Login2FAResponse'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+verify2fa:
+  summary: Verify 2FA OTP
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/Verify2FARequest'
+  responses:
+    '200':
+      description: Access token issued
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AuthResponse'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+forgotPassword:
+  summary: Request password reset
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/ForgotPasswordRequest'
+  responses:
+    '200':
+      description: Email sent if user exists
+
+resetPassword:
+  summary: Reset password by token
+  parameters:
+    - name: token
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/ResetPasswordRequest'
+  responses:
+    '200':
+      description: Password updated
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+register:
+  summary: Register new user
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/RegisterRequest'
+  responses:
+    '201':
+      description: Registration — proceed to 2FA
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Login2FAResponse'
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+refresh:
+  summary: Refresh access token
+  parameters:
+    - in: cookie
+      name: refreshToken
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Access token refreshed successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AuthResponse'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'

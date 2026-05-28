@@ -1,0 +1,153 @@
+openapi: 3.0.0
+info:
+  title: Events Platform API
+  description: API for events registration, captain cabinet and admin panel
+  version: 2.1.0
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /auth/login:
+    post:
+      $ref: "./endpoints/auth.yaml#/login"
+
+  /auth/verify-2fa:
+    post:
+      $ref: "./endpoints/auth.yaml#/verify2fa"
+
+  /auth/forgot-password:
+    post:
+      $ref: "./endpoints/auth.yaml#/forgotPassword"
+
+  /auth/reset-password/{token}:
+    post:
+      $ref: "./endpoints/auth.yaml#/resetPassword"
+
+  /auth/register:
+    post:
+      $ref: "./endpoints/auth.yaml#/register"
+
+  /auth/refresh:
+    post:
+      $ref: "./endpoints/auth.yaml#/refresh"
+
+  /events:
+    get:
+      $ref: "./endpoints/events.yaml#/listEvents"
+
+  /events/{slug}:
+    get:
+      $ref: "./endpoints/events.yaml#/getEventBySlug"
+
+  /events/{slug}/cases:
+    get:
+      $ref: "./endpoints/events.yaml#/getEventCases"
+
+  /events/{slug}/verify-invite-code:
+    post:
+      $ref: "./endpoints/events.yaml#/verifyInviteCode"
+
+  /events/{slug}/register:
+    post:
+      $ref: "./endpoints/events.yaml#/registerTeam"
+
+  /cabinet/team:
+    get:
+      $ref: "./endpoints/cabinet.yaml#/getTeam"
+    put:
+      $ref: "./endpoints/cabinet.yaml#/updateTeam"
+
+  /cabinet/available-cases:
+    get:
+      $ref: "./endpoints/cabinet.yaml#/getAvailableCases"
+
+  /cabinet/available-events:
+    get:
+      $ref: "./endpoints/cabinet.yaml#/getAvailableEvents"
+
+  /cabinet/change-case:
+    post:
+      $ref: "./endpoints/cabinet.yaml#/changeCase"
+
+  /cabinet/change-event:
+    post:
+      $ref: "./endpoints/cabinet.yaml#/changeEvent"
+
+  /cabinet/history:
+    get:
+      $ref: "./endpoints/cabinet.yaml#/getHistory"
+
+  /admin/stats:
+    get:
+      $ref: "./endpoints/admin.yaml#/getStats"
+
+  /admin/events:
+    get:
+      $ref: "./endpoints/admin.yaml#/listAdminEvents"
+    post:
+      $ref: "./endpoints/admin.yaml#/createEvent"
+
+  /admin/events/{eventId}:
+    put:
+      $ref: "./endpoints/admin.yaml#/updateEvent"
+    delete:
+      $ref: "./endpoints/admin.yaml#/deleteEvent"
+
+  /admin/events/{eventId}/cases:
+    get:
+      $ref: "./endpoints/admin.yaml#/listEventCases"
+    post:
+      $ref: "./endpoints/admin.yaml#/createEventCase"
+
+  /admin/events/{eventId}/cases/{caseId}:
+    put:
+      $ref: "./endpoints/admin.yaml#/updateEventCase"
+    delete:
+      $ref: "./endpoints/admin.yaml#/deleteEventCase"
+
+  /admin/events/{eventId}/invite-codes:
+    get:
+      $ref: "./endpoints/admin.yaml#/listInviteCodes"
+    post:
+      $ref: "./endpoints/admin.yaml#/createInviteCode"
+
+  /admin/events/{eventId}/invite-codes/generate:
+    post:
+      $ref: "./endpoints/admin.yaml#/generateInviteCodes"
+
+  /admin/events/{eventId}/invite-codes/{codeId}:
+    delete:
+      $ref: "./endpoints/admin.yaml#/deleteInviteCode"
+
+  /admin/events/{eventId}/teams:
+    get:
+      $ref: "./endpoints/admin.yaml#/listEventTeams"
+
+  /admin/events/{eventId}/teams/export:
+    get:
+      $ref: "./endpoints/admin.yaml#/exportEventTeams"
+
+  /boards:
+    get:
+      $ref: "./endpoints/boards.yaml#/getAllBoards"
+    post:
+      $ref: "./endpoints/boards.yaml#/createBoard"
+
+  /boards/{boardId}:
+    get:
+      $ref: "./endpoints/boards.yaml#/getBoardById"
+    delete:
+      $ref: "./endpoints/boards.yaml#/deleteBoard"
+
+  /boards/{boardId}/favorite:
+    put:
+      $ref: "./endpoints/boards.yaml#/updateBoardFavorite"
+
+  /boards/{boardId}/rename:
+    put:
+      $ref: "./endpoints/boards.yaml#/renameBoard"
