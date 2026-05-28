@@ -1,0 +1,586 @@
+schemas:
+  AdminStats:
+    type: object
+    required:
+      - eventsCount
+      - teamsCount
+      - freeSpotsTotal
+    properties:
+      eventsCount:
+        type: integer
+      teamsCount:
+        type: integer
+      freeSpotsTotal:
+        type: integer
+
+  AdminEvent:
+    allOf:
+      - $ref: './events.yaml#/schemas/Event'
+      - type: object
+        properties:
+          teamsCount:
+            type: integer
+
+  AdminEventList:
+    type: object
+    required:
+      - events
+      - total
+      - totalPages
+    properties:
+      events:
+        type: array
+        items:
+          $ref: '#/schemas/AdminEvent'
+      total:
+        type: integer
+      totalPages:
+        type: integer
+
+  CreateEventRequest:
+    type: object
+    required:
+      - title
+      - keywords
+      - description
+      - status
+      - startsAt
+      - endsAt
+    properties:
+      title:
+        type: string
+      slug:
+        type: string
+        description: Генерируется автоматически из названия, если не передан
+      keywords:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        enum: [active, completed, draft]
+      registrationOpen:
+        type: boolean
+      startsAt:
+        type: string
+        format: date-time
+      endsAt:
+        type: string
+        format: date-time
+
+  UpdateEventRequest:
+    type: object
+    properties:
+      title:
+        type: string
+      slug:
+        type: string
+      keywords:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        enum: [active, completed, draft]
+      registrationOpen:
+        type: boolean
+      startsAt:
+        type: string
+        format: date-time
+      endsAt:
+        type: string
+        format: date-time
+
+  AdminCase:
+    allOf:
+      - $ref: './events.yaml#/schemas/Case'
+      - type: object
+        properties:
+          fillPercent:
+            type: number
+
+  CreateCaseRequest:
+    type: object
+    required:
+      - name
+      - keywords
+      - description
+      - limit
+    properties:
+      name:
+        type: string
+      keywords:
+        type: string
+      description:
+        type: string
+      limit:
+        type: integer
+
+  UpdateCaseRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      keywords:
+        type: string
+      description:
+        type: string
+      limit:
+        type: integer
+
+  InviteCode:
+    type: object
+    required:
+      - id
+      - code
+      - status
+      - expiresAt
+    properties:
+      id:
+        type: string
+      code:
+        type: string
+      status:
+        type: string
+        enum: [active, used, expired]
+      expiresAt:
+        type: string
+        format: date-time
+      usedAt:
+        type: string
+        format: date-time
+
+  InviteCodeList:
+    type: object
+    required:
+      - codes
+    properties:
+      codes:
+        type: array
+        items:
+          $ref: '#/schemas/InviteCode'
+
+  GenerateInviteCodesRequest:
+    type: object
+    required:
+      - count
+      - expiresAt
+    properties:
+      count:
+        type: integer
+      expiresAt:
+        type: string
+        format: date-time
+
+  CreateInviteCodeRequest:
+    type: object
+    required:
+      - code
+      - expiresAt
+    properties:
+      code:
+        type: string
+      expiresAt:
+        type: string
+        format: date-time
+
+  AdminTeam:
+    type: object
+    required:
+      - id
+      - name
+      - captainName
+      - email
+      - phone
+      - caseName
+      - registeredAt
+      - applicationStatus
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      captainName:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+      caseName:
+        type: string
+      registeredAt:
+        type: string
+        format: date-time
+      applicationStatus:
+        type: string
+
+  AdminTeamList:
+    type: object
+    required:
+      - teams
+    properties:
+      teams:
+        type: array
+        items:
+          $ref: '#/schemas/AdminTeam'
+
+  CaseStatsList:
+    type: object
+    required:
+      - cases
+    properties:
+      cases:
+        type: array
+        items:
+          $ref: '#/schemas/AdminCase'
+
+getStats:
+  summary: Admin dashboard stats
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Stats
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminStats'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+
+listAdminEvents:
+  summary: List events for admin
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: page
+      in: query
+      schema:
+        type: integer
+    - name: status
+      in: query
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Events
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminEventList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+createEvent:
+  summary: Create event
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/CreateEventRequest'
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminEvent'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+updateEvent:
+  summary: Update event
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/UpdateEventRequest'
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminEvent'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+deleteEvent:
+  summary: Delete event
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '204':
+      description: Deleted
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+listEventCases:
+  summary: List cases for event (admin)
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Cases with stats
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/CaseStatsList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+createEventCase:
+  summary: Add case to event
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/CreateCaseRequest'
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminCase'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+updateEventCase:
+  summary: Update case
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/UpdateCaseRequest'
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminCase'
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+deleteEventCase:
+  summary: Delete case
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '204':
+      description: Deleted
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+listInviteCodes:
+  summary: List invite codes
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: status
+      in: query
+      schema:
+        type: string
+        enum: [active, used, expired]
+  responses:
+    '200':
+      description: Codes
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/InviteCodeList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+generateInviteCodes:
+  summary: Generate invite codes
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/GenerateInviteCodesRequest'
+  responses:
+    '201':
+      description: Generated
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/InviteCodeList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+createInviteCode:
+  summary: Add invite code manually
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/CreateInviteCodeRequest'
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/InviteCode'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+deleteInviteCode:
+  summary: Revoke invite code
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: codeId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '204':
+      description: Deleted
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+listEventTeams:
+  summary: List teams for event
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: search
+      in: query
+      schema:
+        type: string
+    - name: caseName
+      in: query
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Teams
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/AdminTeamList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+exportEventTeams:
+  summary: Export teams CSV
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: CSV file
+      content:
+        text/csv:
+          schema:
+            type: string

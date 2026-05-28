@@ -1,0 +1,256 @@
+schemas:
+  Event:
+    type: object
+    required:
+      - id
+      - title
+      - slug
+      - description
+      - status
+      - freeSpotsTotal
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      slug:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        enum: [active, completed, draft]
+      freeSpotsTotal:
+        type: integer
+      registrationOpen:
+        type: boolean
+      startsAt:
+        type: string
+        format: date-time
+      endsAt:
+        type: string
+        format: date-time
+      keywords:
+        type: string
+        description: Ключевые слова через запятую (теги на карточке)
+
+  EventList:
+    type: object
+    required:
+      - events
+    properties:
+      events:
+        type: array
+        items:
+          $ref: '#/schemas/Event'
+
+  Case:
+    type: object
+    required:
+      - id
+      - name
+      - limit
+      - occupied
+      - free
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      limit:
+        type: integer
+      occupied:
+        type: integer
+      free:
+        type: integer
+      description:
+        type: string
+      keywords:
+        type: string
+        description: Ключевые слова через запятую (стек технологий)
+
+  CaseList:
+    type: object
+    required:
+      - cases
+    properties:
+      cases:
+        type: array
+        items:
+          $ref: '#/schemas/Case'
+
+  VerifyInviteRequest:
+    type: object
+    required:
+      - code
+    properties:
+      code:
+        type: string
+
+  VerifyInviteResponse:
+    type: object
+    required:
+      - valid
+    properties:
+      valid:
+        type: boolean
+
+  RegisterTeamRequest:
+    type: object
+    required:
+      - caseId
+      - inviteCode
+      - name
+      - captainName
+      - email
+      - phone
+    properties:
+      caseId:
+        type: string
+      inviteCode:
+        type: string
+      name:
+        type: string
+      captainName:
+        type: string
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+
+  RegisterTeamResponse:
+    type: object
+    required:
+      - success
+      - credentials
+      - emailSent
+    properties:
+      success:
+        type: boolean
+      emailSent:
+        type: boolean
+      credentials:
+        type: object
+        required:
+          - login
+          - password
+        properties:
+          login:
+            type: string
+          password:
+            type: string
+
+listEvents:
+  summary: List events
+  parameters:
+    - name: status
+      in: query
+      schema:
+        type: string
+        enum: [active, completed, draft]
+    - name: publicOnly
+      in: query
+      schema:
+        type: boolean
+  responses:
+    '200':
+      description: Events list
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/EventList'
+
+getEventBySlug:
+  summary: Get event by slug
+  parameters:
+    - name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Event
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Event'
+    '404':
+      $ref: '../shared/responses.yaml#/NotFoundError'
+
+getEventCases:
+  summary: Get available cases for event
+  parameters:
+    - name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: available
+      in: query
+      schema:
+        type: boolean
+  responses:
+    '200':
+      description: Cases
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/CaseList'
+    '404':
+      $ref: '../shared/responses.yaml#/NotFoundError'
+
+verifyInviteCode:
+  summary: Verify invite code
+  parameters:
+    - name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/VerifyInviteRequest'
+  responses:
+    '200':
+      description: Verification result
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/VerifyInviteResponse'
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+registerTeam:
+  summary: Register team for event
+  parameters:
+    - name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/RegisterTeamRequest'
+  responses:
+    '201':
+      description: Registered
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/RegisterTeamResponse'
+    '400':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '409':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+    '404':
+      $ref: '../shared/responses.yaml#/NotFoundError'
+    '410':
+      $ref: '../shared/responses.yaml#/BadRequestError'

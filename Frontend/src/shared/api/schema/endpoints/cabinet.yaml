@@ -1,0 +1,257 @@
+schemas:
+  Team:
+    type: object
+    required:
+      - id
+      - name
+      - captainName
+      - email
+      - phone
+      - eventId
+      - caseName
+      - eventTitle
+      - registeredAt
+      - applicationStatus
+      - canEdit
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      captainName:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+      eventId:
+        type: string
+      caseName:
+        type: string
+      eventTitle:
+        type: string
+      registeredAt:
+        type: string
+        format: date-time
+      applicationStatus:
+        type: string
+        enum: [pending, confirmed]
+      canEdit:
+        type: boolean
+
+  UpdateTeamRequest:
+    type: object
+    properties:
+      name:
+        type: string
+      captainName:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+
+  ChangeCaseRequest:
+    type: object
+    required:
+      - caseId
+    properties:
+      caseId:
+        type: string
+
+  CabinetEvent:
+    type: object
+    required:
+      - id
+      - title
+      - status
+      - registrationOpen
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      status:
+        type: string
+        enum: [active, completed, draft]
+      registrationOpen:
+        type: boolean
+
+  CabinetEventList:
+    type: object
+    required:
+      - events
+    properties:
+      events:
+        type: array
+        items:
+          $ref: '#/schemas/CabinetEvent'
+
+  ChangeEventRequest:
+    type: object
+    required:
+      - eventId
+    properties:
+      eventId:
+        type: string
+
+  HistoryEntry:
+    type: object
+    required:
+      - id
+      - action
+      - createdAt
+    properties:
+      id:
+        type: string
+      action:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      details:
+        type: string
+
+  HistoryList:
+    type: object
+    required:
+      - entries
+    properties:
+      entries:
+        type: array
+        items:
+          $ref: '#/schemas/HistoryEntry'
+
+getTeam:
+  summary: Get team (captain)
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Team data
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Team'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+
+updateTeam:
+  summary: Update team (captain only)
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/UpdateTeamRequest'
+  responses:
+    '200':
+      description: Updated team
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Team'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+    '409':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+getAvailableCases:
+  summary: Available cases for change
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Cases
+      content:
+        application/json:
+          schema:
+            $ref: './events.yaml#/schemas/CaseList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+
+getAvailableEvents:
+  summary: Available events for switch
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Events
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/CabinetEventList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+
+changeCase:
+  summary: Change team case (captain only)
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/ChangeCaseRequest'
+  responses:
+    '200':
+      description: Updated team
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Team'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+    '409':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+changeEvent:
+  summary: Change team event (captain only)
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/schemas/ChangeEventRequest'
+  responses:
+    '200':
+      description: Updated team
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/Team'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
+    '403':
+      $ref: '../shared/responses.yaml#/ForbiddenError'
+    '404':
+      $ref: '../shared/responses.yaml#/NotFoundError'
+    '409':
+      $ref: '../shared/responses.yaml#/BadRequestError'
+
+getHistory:
+  summary: Team action history
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: History
+      content:
+        application/json:
+          schema:
+            $ref: '#/schemas/HistoryList'
+    '401':
+      $ref: '../shared/responses.yaml#/UnauthorizedError'
