@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ROUTES } from "@/shared/model/routes";
 import { Link } from "react-router-dom";
 import { useLogin } from "../model/use-login";
+import { SocialLoginStubs } from "./social-login-stubs";
 
 const loginSchema = z.object({
   email: z
@@ -38,6 +39,7 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <SocialLoginStubs />
         <FormField
           control={form.control}
           name="email"
