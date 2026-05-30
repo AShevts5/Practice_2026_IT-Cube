@@ -26,8 +26,7 @@ function Verify2faPage() {
 
   return (
     <AuthLayout
-      title="Двухфакторная аутентификация"
-      description="Введите одноразовый код, отправленный на ваш телефон"
+      title="Подтверждение по email"
       form={<Verify2faForm />}
     />
   );
