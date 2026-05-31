@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
 
     database_url: str = Field(
-        default="postgresql+asyncpg://itkub:itcube@localhost:5432/itcube",
+        default="postgresql+asyncpg://itcube:itcube@localhost:5432/itcube",
     )
 
     secret_key: str = Field(

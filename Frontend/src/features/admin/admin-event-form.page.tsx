@@ -1,7 +1,16 @@
 import { rqClient } from "@/shared/api/instance";
 import type { ApiSchemas } from "@/shared/api/schema/index.ts";
-import { formatKeywords, parseKeywords } from "@/shared/lib/keywords.ts";
+import { EventInvitesPanel } from "@/features/admin/ui/event-invites-panel.tsx";
+import {
+  createEmptyTrack,
+  EventTracksEditor,
+  tracksFromApi,
+  tracksToCreatePayload,
+  tracksToUpsertPayload,
+  type TrackDraft,
+} from "@/features/admin/ui/event-tracks-editor.tsx";
 import { ROUTES, pathTo } from "@/shared/model/routes";
+import { slugifyTitle } from "@/shared/lib/keywords.ts";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
 import { Button } from "@/shared/ui/kit/button";
 import { Input } from "@/shared/ui/kit/input";
@@ -13,133 +22,139 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/kit/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
-type EventFormValues = {
-  title: string;
-  keywords: string;
-  description: string;
-  status: string;
-  registrationOpen: boolean;
-  startsAt: string;
-  endsAt: string;
-};
+const STATUS_OPTIONS: ApiSchemas["EventStatus"][] = [
+  "draft",
+  "published",
+  "registration_open",
+  "registration_closed",
+  "finished",
+];
 
-const emptyForm: EventFormValues = {
-  title: "",
-  keywords: "",
-  description: "",
-  status: "draft",
-  registrationOpen: false,
-  startsAt: "",
-  endsAt: "",
-};
-
-const strictDateTimeLocal = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-
-function normalizeIsoToDateTimeLocal(value?: string): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const year = date.getFullYear();
-  if (year < 1000 || year > 9999) return "";
-
-  const yyyy = String(year).padStart(4, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const hh = String(date.getHours()).padStart(2, "0");
-  const min = String(date.getMinutes()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-}
-
-function eventToFormValues(event: ApiSchemas["Event"]): EventFormValues {
-  return {
-    title: event.title,
-    keywords: event.keywords ?? "",
-    description: event.description,
-    status: event.status,
-    registrationOpen: event.registrationOpen ?? false,
-    startsAt: normalizeIsoToDateTimeLocal(event.startsAt),
-    endsAt: normalizeIsoToDateTimeLocal(event.endsAt),
-  };
-}
-
-function parseDateTimeLocal(value: string): Date | null {
-  if (!value) return null;
-  if (!strictDateTimeLocal.test(value)) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  const year = date.getFullYear();
-  if (year < 1000 || year > 9999) return null;
-  return date;
-}
-
-function EventFormFields({
-  eventId,
-  isEdit,
-  initial,
-}: {
-  eventId?: string;
-  isEdit: boolean;
-  initial: EventFormValues;
-}) {
+function AdminEventFormPage() {
+  const { eventId } = useParams();
   const navigate = useNavigate();
-  const [title, setTitle] = useState(initial.title);
-  const [keywords, setKeywords] = useState(initial.keywords);
-  const [description, setDescription] = useState(initial.description);
-  const [status, setStatus] = useState(initial.status);
-  const [registrationOpen, setRegistrationOpen] = useState(initial.registrationOpen);
-  const [startsAt, setStartsAt] = useState(initial.startsAt);
-  const [endsAt, setEndsAt] = useState(initial.endsAt);
+  const queryClient = useQueryClient();
+  const isEdit = Boolean(eventId);
+  const numericId = Number(eventId);
+
+  const { data: events, isPending } = rqClient.useQuery(
+    "get",
+    "/admin/events",
+    undefined,
+    { enabled: isEdit },
+  );
+
+  const event = events?.find((e) => e.id === numericId);
+
+  const [title, setTitle] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<ApiSchemas["EventStatus"]>("draft");
+  const [tracks, setTracks] = useState<TrackDraft[]>([createEmptyTrack()]);
+
+  useEffect(() => {
+    if (!event) return;
+    setTitle(event.title);
+    setKeywords(event.keywords ?? "");
+    setDescription(event.description);
+    setStatus(event.status);
+    setTracks(tracksFromApi(event.tracks));
+  }, [event]);
+
+  const invalidateEvents = () =>
+    queryClient.invalidateQueries(rqClient.queryOptions("get", "/admin/events"));
 
   const createMutation = rqClient.useMutation("post", "/admin/events", {
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success("Мероприятие создано");
-      navigate(pathTo(ROUTES.ADMIN_EVENT_EDIT, { eventId: data.id }));
+      await invalidateEvents();
+      navigate(pathTo(ROUTES.ADMIN_EVENT_EDIT, { eventId: String(data.id) }));
     },
+    onError: () => toast.error("Не удалось создать мероприятие"),
   });
 
-  const updateMutation = rqClient.useMutation("put", "/admin/events/{eventId}", {
-    onSuccess: () => {
+  const updateMutation = rqClient.useMutation("patch", "/admin/events/{event_id}", {
+    onSuccess: async () => {
       toast.success("Сохранено");
+      await invalidateEvents();
     },
+    onError: () => toast.error("Не удалось сохранить"),
   });
+
+  const finishMutation = rqClient.useMutation(
+    "post",
+    "/admin/events/{event_id}/finish",
+    {
+      onSuccess: async () => {
+        toast.success("Мероприятие завершено");
+        await invalidateEvents();
+      },
+    },
+  );
 
   const submit = () => {
-    const parsedStart = parseDateTimeLocal(startsAt);
-    const parsedEnd = parseDateTimeLocal(endsAt);
-
-    if (!parsedStart || !parsedEnd) {
-      toast.error("Укажите корректные даты в формате YYYY-MM-DDTHH:mm");
+    if (!title.trim()) {
+      toast.error("Укажите название");
       return;
     }
 
-    if (parsedStart >= parsedEnd) {
-      toast.error("Дата окончания должна быть позже даты начала");
+    const tracksPayload = isEdit
+      ? tracksToUpsertPayload(tracks)
+      : tracksToCreatePayload(tracks);
+    if (tracksPayload.length === 0) {
+      toast.error("Добавьте хотя бы один кейс");
       return;
     }
 
-    const body = {
-      title,
-      keywords: formatKeywords(parseKeywords(keywords)),
-      description,
-      status: status as "active" | "completed" | "draft",
-      registrationOpen,
-      startsAt: parsedStart.toISOString(),
-      endsAt: parsedEnd.toISOString(),
-    };
-    if (isEdit && eventId) {
-      updateMutation.mutate({ params: { path: { eventId } }, body });
-    } else {
-      createMutation.mutate({ body });
+    if (isEdit && Number.isFinite(numericId)) {
+      updateMutation.mutate({
+        params: { path: { event_id: numericId } },
+        body: {
+          title,
+          description,
+          keywords: keywords.trim(),
+          status,
+          tracks: tracksPayload,
+        },
+      });
+      return;
     }
+
+    createMutation.mutate({
+      body: {
+        title,
+        slug: slugifyTitle(title),
+        description,
+        keywords: keywords.trim(),
+        tracks: tracksPayload,
+      },
+    });
   };
 
+  if (isEdit && isPending) {
+    return <p className="text-muted-foreground text-sm">Загрузка…</p>;
+  }
+
+  if (isEdit && !isPending && !event) {
+    return <p className="text-destructive text-sm">Мероприятие не найдено</p>;
+  }
+
   return (
-    <>
+    <div className="max-w-2xl space-y-4">
+      <PageHeader
+        title={isEdit ? "Редактирование мероприятия" : "Новое мероприятие"}
+        description={
+          isEdit
+            ? "Параметры события, кейсы и инвайт-коды"
+            : "Создание мероприятия с кейсами"
+        }
+      />
+
       <div className="space-y-3">
         <div>
           <Label>Название</Label>
@@ -150,8 +165,9 @@ function EventFormFields({
           <Input
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            placeholder="React, Node.js, PostgreSQL"
+            placeholder="React, TypeScript, Python"
           />
+          <p className="text-muted-foreground mt-1 text-xs">Через запятую — отображаются на карточке</p>
         </div>
         <div>
           <Label>Описание</Label>
@@ -162,104 +178,68 @@ function EventFormFields({
             className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/30 w-full min-w-0 rounded-xl border px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] md:text-sm"
           />
         </div>
-        <div>
-          <Label>Статус</Label>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Черновик</SelectItem>
-              <SelectItem value="active">Активно</SelectItem>
-              <SelectItem value="completed">Завершено</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={registrationOpen}
-            onChange={(e) => setRegistrationOpen(e.target.checked)}
-          />
-          Регистрация открыта
-        </label>
-        <div>
-          <Label>Начало</Label>
-          <Input
-            type="datetime-local"
-            value={startsAt}
-            step={60}
-            onChange={(e) => setStartsAt(e.target.value)}
-          />
-        </div>
-        <div>
-          <Label>Окончание</Label>
-          <Input
-            type="datetime-local"
-            value={endsAt}
-            step={60}
-            onChange={(e) => setEndsAt(e.target.value)}
-          />
-        </div>
+        {isEdit ? (
+          <div>
+            <Label>Статус</Label>
+            <Select
+              value={status}
+              onValueChange={(v) => setStatus(v as ApiSchemas["EventStatus"])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Для открытия регистрации выберите registration_open
+            </p>
+          </div>
+        ) : null}
       </div>
-      <div className="flex gap-2">
-        <Button onClick={submit}>Сохранить</Button>
+
+      <EventTracksEditor tracks={tracks} onChange={setTracks} />
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={submit}
+          disabled={createMutation.isPending || updateMutation.isPending}
+        >
+          Сохранить
+        </Button>
         <Button asChild variant="outline">
           <Link to={ROUTES.ADMIN_EVENTS}>Назад</Link>
         </Button>
+        {isEdit && Number.isFinite(numericId) ? (
+          <>
+            <Button asChild variant="secondary" size="sm">
+              <Link to={pathTo(ROUTES.ADMIN_EVENT_TEAMS, { eventId: eventId! })}>
+                Команды
+              </Link>
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() =>
+                finishMutation.mutate({
+                  params: { path: { event_id: numericId } },
+                })
+              }
+            >
+              Завершить
+            </Button>
+          </>
+        ) : null}
       </div>
-      {isEdit && eventId ? (
-        <div className="flex flex-wrap gap-2 pt-4">
-          <Button asChild variant="secondary" size="sm">
-            <Link to={pathTo(ROUTES.ADMIN_EVENT_CASES, { eventId })}>Кейсы</Link>
-          </Button>
-          <Button asChild variant="secondary" size="sm">
-            <Link to={pathTo(ROUTES.ADMIN_EVENT_INVITES, { eventId })}>
-              Инвайт-коды
-            </Link>
-          </Button>
-          <Button asChild variant="secondary" size="sm">
-            <Link to={pathTo(ROUTES.ADMIN_EVENT_TEAMS, { eventId })}>Команды</Link>
-          </Button>
-        </div>
+
+      {isEdit && Number.isFinite(numericId) ? (
+        <EventInvitesPanel eventId={numericId} />
       ) : null}
-    </>
-  );
-}
-
-function AdminEventFormPage() {
-  const { eventId } = useParams();
-  const isEdit = Boolean(eventId);
-
-  const { data: existing, isPending } = rqClient.useQuery(
-    "get",
-    "/admin/events",
-    undefined,
-    { enabled: isEdit },
-  );
-
-  const event = existing?.events.find((e) => e.id === eventId);
-
-  return (
-    <div className="max-w-lg space-y-4">
-      <PageHeader
-        title={isEdit ? "Редактирование мероприятия" : "Новое мероприятие"}
-        description={
-          isEdit ? "Изменение параметров и настроек события" : "Создание нового события"
-        }
-      />
-      {isEdit && isPending ? (
-        <p className="text-muted-foreground text-sm">Загрузка…</p>
-      ) : isEdit && !event ? (
-        <p className="text-destructive text-sm">Мероприятие не найдено</p>
-      ) : (
-        <EventFormFields
-          key={event?.id ?? "new"}
-          eventId={eventId}
-          isEdit={isEdit}
-          initial={event ? eventToFormValues(event) : emptyForm}
-        />
-      )}
     </div>
   );
 }

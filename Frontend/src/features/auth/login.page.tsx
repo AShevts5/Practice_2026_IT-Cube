@@ -11,9 +11,13 @@ function LoginPage() {
       footerText={
         <>
           <p className="text-muted-foreground mb-2 text-xs">
-            Демо: admin / captain @gmail.com, пароль 123456, OTP 123456
+            Капитан до регистрации команды — email и пароль аккаунта. После
+            регистрации команды — логин team_… и пароль команды. Админ:
+            admin@itcube.local / admin123. OTP — Mailpit (http://localhost:8025).
           </p>
-          Нет аккаунта? <Link to={ROUTES.REGISTER}>Зарегистрироваться</Link>
+          <Link to={ROUTES.HOME}>К мероприятиям</Link>
+          {" · "}
+          <Link to={ROUTES.REGISTER}>Как зарегистрировать команду</Link>
         </>
       }
     />

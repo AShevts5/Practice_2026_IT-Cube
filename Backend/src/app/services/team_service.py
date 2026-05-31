@@ -14,7 +14,7 @@ class TeamService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def get_cabinet(self, team: Team) -> TeamCabinetSchema:
+    async def get_cabinet(self, team: Team, *, is_captain: bool = False) -> TeamCabinetSchema:
         stmt = (
             select(Team)
             .where(Team.id == team.id)
@@ -22,6 +22,7 @@ class TeamService:
         )
         result = await self.db.execute(stmt)
         full_team = result.scalar_one()
+        registration_open = is_registration_open(full_team.event.status)
         return TeamCabinetSchema(
             id=full_team.id,
             team_name=full_team.name,
@@ -32,6 +33,8 @@ class TeamService:
             event_slug=full_team.event.slug,
             track_title=full_team.track.title,
             track_id=full_team.track_id,
+            can_edit=registration_open,
+            can_manage=registration_open and is_captain,
         )
 
     async def update_cabinet(self, team: Team, data: TeamUpdateSchema) -> TeamCabinetSchema:
@@ -77,7 +80,7 @@ class TeamService:
             current.track_id = new_track.id
 
         await self.db.flush()
-        return await self.get_cabinet(current)
+        return await self.get_cabinet(current, is_captain=True)
 
     async def track_stats(self, event_id: int) -> list[TrackStatsSchema]:
         event = await self.db.get(Event, event_id)

@@ -1,196 +1,120 @@
-import { rqClient } from "@/shared/api/instance";
+import { rqClient, publicRqClient } from "@/shared/api/instance";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ApiSchemas } from "@/shared/api/schema/index.ts";
 import { getCaseCatalogItem } from "@/features/cabinet/model/case-catalog.ts";
 import { CabinetPageHeader } from "@/features/cabinet/ui/cabinet-page-header.tsx";
 import { CaseCard } from "@/features/cabinet/ui/case-card.tsx";
 import { CaseConfirmedBanner } from "@/features/cabinet/ui/case-confirmed-banner.tsx";
+import { ROUTES } from "@/shared/model/routes";
 import { Button } from "@/shared/ui/kit/button";
-import { Label } from "@/shared/ui/kit/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/kit/select";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 function CabinetChangeCasePage() {
   const queryClient = useQueryClient();
-  const { data: team } = rqClient.useQuery("get", "/cabinet/team");
-  const { data, isPending } = rqClient.useQuery(
+  const { data: team } = rqClient.useQuery("get", "/team/me");
+  const { data: event, isPending } = publicRqClient.useQuery(
     "get",
-    "/cabinet/available-cases",
-  );
-  const { data: eventsData, isPending: isEventsPending } = rqClient.useQuery(
-    "get",
-    "/cabinet/available-events",
+    "/public/events/{slug}",
+    { params: { path: { slug: team?.event_slug ?? "" } } },
+    { enabled: Boolean(team?.event_slug) },
   );
 
-  const cases = data?.cases ?? [];
-  const availableEvents = eventsData?.events ?? [];
-  const currentCaseId =
-    cases.find((c) => c.name === team?.caseName)?.id ?? "";
-  const currentEventId = team?.eventId ?? "";
+  const tracks =
+    event?.tracks.filter(
+      (t) => t.seats_available > 0 || t.id === team?.track_id,
+    ) ?? [];
 
-  const [pickedId, setPickedId] = useState<string | null>(null);
-  const [pickedEventId, setPickedEventId] = useState<string>("");
-  const selectedId = pickedId ?? currentCaseId;
-  const selectedEventId = pickedEventId || currentEventId;
+  const [pickedId, setPickedId] = useState<number | null>(null);
+  const selectedId = pickedId ?? team?.track_id ?? null;
 
-  const mutation = rqClient.useMutation("post", "/cabinet/change-case", {
+  const mutation = rqClient.useMutation("patch", "/team/me", {
     onSuccess: async () => {
       await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/team"),
-      );
-      await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/available-cases"),
-      );
-      await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/available-events"),
+        rqClient.queryOptions("get", "/team/me"),
       );
       setPickedId(null);
       toast.success("Кейс сохранён");
     },
   });
 
-  const changeEventMutation = rqClient.useMutation("post", "/cabinet/change-event", {
-    onSuccess: async () => {
-      await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/team"),
-      );
-      await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/available-cases"),
-      );
-      await queryClient.invalidateQueries(
-        rqClient.queryOptions("get", "/cabinet/available-events"),
-      );
-      setPickedId(null);
-      setPickedEventId("");
-      toast.success("Мероприятие изменено");
-    },
-  });
+  if (isPending || !team) {
+    return <Skeleton className="h-64 w-full rounded-2xl" />;
+  }
 
-  const selectedCase = cases.find((c) => c.id === selectedId);
-  const currentCase = cases.find((c) => c.id === currentCaseId);
-  const confirmedCatalog = currentCase
-    ? getCaseCatalogItem(currentCase.id, currentCase.name, {
-        description: currentCase.description,
-        keywords: currentCase.keywords,
-      })
-    : currentCaseId
-      ? getCaseCatalogItem(currentCaseId, team?.caseName)
-      : null;
-  const hasChanges = Boolean(pickedId && pickedId !== currentCaseId);
-
-  const hasEventChanges = Boolean(
-    selectedEventId && currentEventId && selectedEventId !== currentEventId,
-  );
-
-  if (isPending || isEventsPending) {
+  if (!team.can_manage) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-72 rounded-2xl" />
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <div className="flex flex-col gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
-          ))}
-        </div>
+      <div>
+        <CabinetPageHeader title="Смена кейса" description="Действие недоступно" />
+        <p className="text-muted-foreground mb-4 text-sm">
+          {!team.can_edit
+            ? "Регистрация закрыта — сменить кейс нельзя."
+            : "Смена кейса доступна только капитану команды."}
+        </p>
+        <Button asChild variant="outline">
+          <Link to={ROUTES.CABINET_DASHBOARD}>← К команде</Link>
+        </Button>
       </div>
     );
   }
 
+  const selectedTrack = tracks.find((t) => t.id === selectedId);
+  const currentTrack = tracks.find((t) => t.id === team.track_id);
+  const confirmedCatalog = currentTrack
+    ? getCaseCatalogItem(String(currentTrack.id), currentTrack.title, {
+        description: currentTrack.description,
+      })
+    : getCaseCatalogItem(String(team.track_id), team.track_title);
+
   return (
     <div>
-      <CabinetPageHeader title="Выбор кейса" />
+      <CabinetPageHeader
+        title="Смена кейса"
+        description="Выберите направление, если есть свободные места"
+      />
 
-      <div className="border-border bg-card mb-6 rounded-2xl border p-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end">
-          <div className="w-full md:max-w-sm">
-            <Label className="mb-2 block">Мероприятие</Label>
-            <Select value={selectedEventId} onValueChange={setPickedEventId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите мероприятие" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableEvents.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            variant="outline"
-            disabled={!hasEventChanges || changeEventMutation.isPending}
-            onClick={() => {
-              if (!selectedEventId || selectedEventId === currentEventId) return;
-              changeEventMutation.mutate({ body: { eventId: selectedEventId } });
-            }}
-          >
-            {changeEventMutation.isPending ? "Смена…" : "Сменить мероприятие"}
-          </Button>
-        </div>
-      </div>
-
-      {team && confirmedCatalog ? (
+      {confirmedCatalog ? (
         <CaseConfirmedBanner
           caseTitle={confirmedCatalog.title}
-          eventTitle={team.eventTitle}
+          eventTitle={team.event_title}
         />
       ) : null}
 
-      {cases.length === 0 ? (
-        <p className="text-muted-foreground py-12 text-center">
-          Нет доступных кейсов
-        </p>
-      ) : (
-        <>
-          <div className="flex flex-col gap-4">
-            {cases.map((caseItem: ApiSchemas["Case"]) => (
-              <CaseCard
-                key={caseItem.id}
-                caseItem={caseItem}
-                selected={selectedId === caseItem.id}
-                disabled={mutation.isPending || changeEventMutation.isPending}
-                onSelect={() => setPickedId(caseItem.id)}
-              />
-            ))}
-          </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {tracks.map((track) => {
+          const catalog = getCaseCatalogItem(String(track.id), track.title, {
+            description: track.description,
+          });
+          return (
+            <CaseCard
+              key={track.id}
+              title={catalog.title}
+              description={catalog.description}
+              selected={selectedId === track.id}
+              occupied={track.teams_registered}
+              limit={track.team_limit}
+              onSelect={() => setPickedId(track.id)}
+            />
+          );
+        })}
+      </div>
 
-          <div className="mt-8 flex items-center justify-end gap-3">
-            {selectedCase ? (
-              <p className="text-muted-foreground mr-auto text-sm">
-                Выбрано:{" "}
-                <span className="text-foreground font-medium">
-                  {
-                    getCaseCatalogItem(selectedCase.id, selectedCase.name, {
-                      description: selectedCase.description,
-                      keywords: selectedCase.keywords,
-                    }).title
-                  }
-                </span>
-              </p>
-            ) : null}
-            <Button
-              disabled={
-                !hasChanges || mutation.isPending || changeEventMutation.isPending
-              }
-              onClick={() => {
-                if (!selectedId) return;
-                mutation.mutate({ body: { caseId: selectedId } });
-              }}
-            >
-              {mutation.isPending ? "Сохранение…" : "Подтвердить выбор"}
-            </Button>
-          </div>
-        </>
+      {tracks.length === 0 && (
+        <p className="text-muted-foreground mt-4">Нет доступных кейсов для смены</p>
       )}
+
+      {selectedTrack && selectedId !== team.track_id ? (
+        <Button
+          className="mt-6"
+          disabled={mutation.isPending}
+          onClick={() =>
+            mutation.mutate({ body: { track_id: selectedId ?? undefined } })
+          }
+        >
+          Сохранить выбор
+        </Button>
+      ) : null}
     </div>
   );
 }

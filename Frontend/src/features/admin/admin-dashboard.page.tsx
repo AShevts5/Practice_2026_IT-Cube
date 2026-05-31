@@ -1,47 +1,45 @@
 import { rqClient } from "@/shared/api/instance";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/kit/card";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 
 function AdminDashboardPage() {
-  const { data, isPending, isError } = rqClient.useQuery("get", "/admin/stats");
+  const { data: events, isPending, isError } = rqClient.useQuery(
+    "get",
+    "/admin/events",
+  );
 
   if (isPending) {
-    return (
-      <div className="grid gap-4 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-2xl" />
-        ))}
-      </div>
-    );
+    return <Skeleton className="h-40 w-full rounded-2xl" />;
   }
 
-  if (isError || !data) {
-    return <p className="text-destructive">Ошибка загрузки статистики</p>;
+  if (isError) {
+    return <p className="text-destructive">Не удалось загрузить статистику</p>;
   }
 
-  const items = [
-    { label: "Мероприятий", value: data.eventsCount },
-    { label: "Команд", value: data.teamsCount },
-    { label: "Свободных мест", value: data.freeSpotsTotal },
-  ];
+  const totalEvents = events?.length ?? 0;
+  const openRegistration =
+    events?.filter((e) => e.status === "registration_open").length ?? 0;
+  const totalTracks = events?.reduce((sum, e) => sum + e.tracks.length, 0) ?? 0;
 
   return (
     <div>
-      <PageHeader title="Дашборд" description="Сводка по платформе" />
+      <PageHeader
+        title="Админ-панель"
+        description="Обзор платформы регистрации команд"
+      />
       <div className="grid gap-4 sm:grid-cols-3">
-        {items.map((item) => (
-          <Card key={item.label}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-normal">
-                {item.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{item.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="border-border rounded-2xl border p-4">
+          <p className="text-muted-foreground text-xs uppercase">Мероприятия</p>
+          <p className="mt-2 text-3xl font-semibold">{totalEvents}</p>
+        </div>
+        <div className="border-border rounded-2xl border p-4">
+          <p className="text-muted-foreground text-xs uppercase">Открыта регистрация</p>
+          <p className="mt-2 text-3xl font-semibold">{openRegistration}</p>
+        </div>
+        <div className="border-border rounded-2xl border p-4">
+          <p className="text-muted-foreground text-xs uppercase">Кейсов всего</p>
+          <p className="mt-2 text-3xl font-semibold">{totalTracks}</p>
+        </div>
       </div>
     </div>
   );

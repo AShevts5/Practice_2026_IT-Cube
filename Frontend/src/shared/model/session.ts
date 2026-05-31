@@ -1,50 +1,61 @@
 import { createGStore } from "create-gstore";
 import { jwtDecode } from "jwt-decode";
 import { useMemo, useState } from "react";
-import { publicFetchClient } from "@/shared/api/instance";
+import { getViewerRole, type ViewerRole } from "./viewer-role.ts";
 
-export type UserRole = "team" | "admin";
+export type UserRole = "team" | "admin" | "captain";
+export type AuthTarget = "team" | "admin" | "captain";
 
 export type Session = {
-  userId: string;
-  email: string;
+  sub: string;
   role: UserRole;
-  twoFaVerified?: boolean;
   exp: number;
-  iat: number;
 };
 
 const TOKEN_KEY = "token";
-const TEMP_TOKEN_KEY = "tempToken";
+const CHALLENGE_KEY = "otpChallenge";
+const AUTH_TARGET_KEY = "authTarget";
 
-let refreshTokenPromise: Promise<string | null> | null = null;
+type OtpChallenge = {
+  challengeId: number;
+  channel: string;
+};
 
 export const useSession = createGStore(() => {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
-  const [tempToken, setTempTokenState] = useState(() =>
-    sessionStorage.getItem(TEMP_TOKEN_KEY),
+  const [otpChallenge, setOtpChallengeState] = useState<OtpChallenge | null>(() => {
+    const raw = sessionStorage.getItem(CHALLENGE_KEY);
+    return raw ? (JSON.parse(raw) as OtpChallenge) : null;
+  });
+  const [authTarget, setAuthTargetState] = useState<AuthTarget | null>(() =>
+    (sessionStorage.getItem(AUTH_TARGET_KEY) as AuthTarget | null) ?? null,
   );
 
-  const login = (newToken: string) => {
-    localStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
-    clearTempToken();
+  const login = (accessToken: string) => {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    setToken(accessToken);
+    clearOtpChallenge();
   };
 
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
-    clearTempToken();
+    clearOtpChallenge();
   };
 
-  const setTempToken = (value: string) => {
-    sessionStorage.setItem(TEMP_TOKEN_KEY, value);
-    setTempTokenState(value);
+  const setOtpChallenge = (challengeId: number, channel: string, target: AuthTarget) => {
+    const value = { challengeId, channel };
+    sessionStorage.setItem(CHALLENGE_KEY, JSON.stringify(value));
+    sessionStorage.setItem(AUTH_TARGET_KEY, target);
+    setOtpChallengeState(value);
+    setAuthTargetState(target);
   };
 
-  const clearTempToken = () => {
-    sessionStorage.removeItem(TEMP_TOKEN_KEY);
-    setTempTokenState(null);
+  const clearOtpChallenge = () => {
+    sessionStorage.removeItem(CHALLENGE_KEY);
+    sessionStorage.removeItem(AUTH_TARGET_KEY);
+    setOtpChallengeState(null);
+    setAuthTargetState(null);
   };
 
   const session = useMemo(
@@ -53,49 +64,36 @@ export const useSession = createGStore(() => {
   );
 
   const isAuthenticated = Boolean(
-    session?.twoFaVerified && session.exp * 1000 > Date.now(),
+    session && session.exp * 1000 > Date.now(),
   );
 
-  const refreshToken = async (): Promise<string | null> => {
-    if (!token) {
+  const viewerRole = useMemo<ViewerRole>(
+    () => getViewerRole(isAuthenticated, session),
+    [isAuthenticated, session],
+  );
+
+  const getAccessToken = (): string | null => {
+    if (!token || !session) {
       return null;
     }
-
-    const decoded = jwtDecode<Session>(token);
-
-    if (decoded.exp >= Date.now() / 1000) {
-      return token;
+    if (session.exp * 1000 <= Date.now()) {
+      logout();
+      return null;
     }
-
-    if (!refreshTokenPromise) {
-      refreshTokenPromise = publicFetchClient
-        .POST("/auth/refresh")
-        .then((r) => r.data?.accessToken ?? null)
-        .then((newToken) => {
-          if (newToken) {
-            login(newToken);
-            return newToken;
-          }
-          logout();
-          return null;
-        })
-        .finally(() => {
-          refreshTokenPromise = null;
-        });
-    }
-
-    return refreshTokenPromise;
+    return token;
   };
 
   return {
-    refreshToken,
+    getAccessToken,
     login,
     logout,
     session,
     token,
-    tempToken,
-    setTempToken,
-    clearTempToken,
+    otpChallenge,
+    authTarget,
+    setOtpChallenge,
+    clearOtpChallenge,
     isAuthenticated,
+    viewerRole,
   };
 });

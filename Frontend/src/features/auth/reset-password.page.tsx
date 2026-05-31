@@ -22,13 +22,13 @@ const schema = z.object({
 
 function ResetPasswordForm({ token }: { token: string }) {
   const form = useForm({ resolver: zodResolver(schema) });
-  const { submit, isPending, errorMessage } = useResetPassword(token);
+  const { reset, isPending, errorMessage } = useResetPassword(token);
 
   return (
     <Form {...form}>
       <form
         className="flex flex-col gap-4"
-        onSubmit={form.handleSubmit(submit)}
+        onSubmit={form.handleSubmit(({ password }) => reset(password))}
       >
         <FormField
           control={form.control}

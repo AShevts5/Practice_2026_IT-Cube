@@ -1,6 +1,9 @@
-import { publicRqClient } from "@/shared/api/instance";
-import type { ApiSchemas } from "@/shared/api/schema/index.ts";
+import { rqClient, publicRqClient } from "@/shared/api/instance";
+import { useQueryClient } from "@tanstack/react-query";
+import { captainRegisterPath } from "@/features/auth/model/use-register";
 import { pathTo, ROUTES } from "@/shared/model/routes";
+import { useSession } from "@/shared/model/session";
+import { isGuest, isTeamMember } from "@/shared/model/viewer-role";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
 import { Button } from "@/shared/ui/kit/button";
 import {
@@ -23,39 +26,35 @@ import { Stepper } from "@/shared/ui/kit/stepper";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useSession } from "@/shared/model/session";
-import { useEffect } from "react";
 
 const STEPS = [
-  { id: "case", title: "Кейс" },
+  { id: "track", title: "Кейс" },
   { id: "team", title: "Команда" },
   { id: "invite", title: "Инвайт-код" },
   { id: "done", title: "Готово" },
 ];
 
 const inviteSchema = z.object({
-  code: z.string().min(1, "Введите код"),
+  code: z.string().min(4, "Введите код"),
 });
 
 const teamSchema = z.object({
-  name: z.string().min(2, "Название команды"),
-  captainName: z.string().min(2, "ФИО капитана"),
-  email: z.string().email("Email"),
-  phone: z.string().min(10, "Телефон"),
+  team_name: z.string().min(2, "Название команды"),
 });
 
 function EventRegisterPage() {
   const { slug } = useParams();
-  const { isAuthenticated, session } = useSession();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { viewerRole } = useSession();
   const [step, setStep] = useState(0);
-  const [caseId, setCaseId] = useState("");
+  const [trackId, setTrackId] = useState<number | null>(null);
   const [success, setSuccess] = useState<{
     login: string;
     password: string;
-    emailSent: boolean;
   } | null>(null);
 
   const inviteForm = useForm({
@@ -66,89 +65,110 @@ function EventRegisterPage() {
     resolver: zodResolver(teamSchema),
   });
 
-  const { data: casesData } = publicRqClient.useQuery(
+  const { data: captain } = rqClient.useQuery(
     "get",
-    "/events/{slug}/cases",
-    {
-      params: { path: { slug: slug! }, query: { available: true } },
-    },
-    { enabled: Boolean(slug) },
-  );
-
-  const verifyMutation = publicRqClient.useMutation(
-    "post",
-    "/events/{slug}/verify-invite-code",
-  );
-  const registerMutation = publicRqClient.useMutation(
-    "post",
-    "/events/{slug}/register",
+    "/captain/me",
+    undefined,
+    { enabled: viewerRole === "captain" },
   );
 
   const { data: event } = publicRqClient.useQuery(
     "get",
-    "/events/{slug}",
+    "/public/events/{slug}",
     { params: { path: { slug: slug! } } },
     { enabled: Boolean(slug) },
   );
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      toast.info("Войдите в аккаунт, чтобы зарегистрировать команду");
-    }
-  }, [isAuthenticated]);
+  const registerMutation = rqClient.useMutation(
+    "post",
+    "/registration/events/{event_slug}/teams",
+  );
 
   if (!slug) return null;
 
-  if (session?.role === "admin") {
-    if (event) {
-      return (
-        <Navigate
-          to={pathTo(ROUTES.ADMIN_EVENT_EDIT, { eventId: event.id })}
-          replace
-        />
-      );
-    }
-    return <Navigate to={ROUTES.ADMIN} replace />;
+  const registerPath = pathTo(ROUTES.EVENT_REGISTER, { slug });
+
+  if (success) {
+    return (
+      <div className="max-w-lg">
+        <PageHeader title="Регистрация команды" description="Команда успешно создана" />
+        <Stepper steps={STEPS} currentStep={3} className="mb-8" />
+        <div className="border-border bg-card space-y-4 rounded-2xl border p-6">
+          <h2 className="text-lg font-semibold">Команда зарегистрирована</h2>
+          <p className="text-muted-foreground text-sm">
+            Передайте логин и пароль участникам команды — они войдут в кабинет как
+            участники. Вы продолжаете работать в кабинете со своим аккаунтом капитана.
+          </p>
+          <dl className="space-y-2 text-sm">
+            <div>
+              <dt className="text-muted-foreground">Логин команды</dt>
+              <dd className="font-mono font-medium">{success.login}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Пароль команды</dt>
+              <dd className="font-mono font-medium">{success.password}</dd>
+            </div>
+          </dl>
+          <Button onClick={() => navigate(ROUTES.CABINET_DASHBOARD)}>
+            В личный кабинет
+          </Button>
+        </div>
+        <Button asChild variant="link" className="mt-6 px-0">
+          <Link to={pathTo(ROUTES.EVENT, { slug })}>← К мероприятию</Link>
+        </Button>
+      </div>
+    );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+  if (isGuest(viewerRole)) {
+    return <Navigate to={captainRegisterPath(registerPath)} replace />;
   }
 
-  const onInvite = inviteForm.handleSubmit(async ({ code }) => {
+  if (isTeamMember(viewerRole)) {
+    return <Navigate to={ROUTES.CABINET_DASHBOARD} replace />;
+  }
+
+  if (captain?.has_team) {
+    return <Navigate to={ROUTES.CABINET_DASHBOARD} replace />;
+  }
+
+  if (event && !event.registration_open) {
+    return <Navigate to={pathTo(ROUTES.EVENT, { slug })} replace />;
+  }
+
+  const onSubmit = inviteForm.handleSubmit(async ({ code }) => {
     const team = teamForm.getValues();
-    if (!caseId) {
+    if (!trackId) {
       toast.error("Выберите кейс");
       return;
     }
 
     const teamValidation = teamSchema.safeParse(team);
     if (!teamValidation.success) {
-      toast.error("Заполните данные команды");
+      toast.error("Укажите название команды");
       return;
     }
 
-    const res = await verifyMutation.mutateAsync({
-      params: { path: { slug } },
-      body: { code },
-    });
-    if (!res.valid) {
-      toast.error("Неверный инвайт-код (демо: INVITE2026)");
-      return;
-    }
     try {
       const registerRes = await registerMutation.mutateAsync({
-        params: { path: { slug } },
-        body: { ...teamValidation.data, caseId, inviteCode: code },
+        params: { path: { event_slug: slug } },
+        body: {
+          team_name: teamValidation.data.team_name,
+          track_id: trackId,
+          invite_code: code,
+        },
       });
+
       setSuccess({
-        login: registerRes.credentials.login,
-        password: registerRes.credentials.password,
-        emailSent: registerRes.emailSent,
+        login: registerRes.login,
+        password: registerRes.password,
       });
       setStep(3);
+      await queryClient.invalidateQueries(
+        rqClient.queryOptions("get", "/captain/me"),
+      );
     } catch {
-      return;
+      toast.error("Не удалось зарегистрировать команду. Проверьте инвайт-код (демо: DEMO2026).");
     }
   });
 
@@ -156,36 +176,43 @@ function EventRegisterPage() {
     setStep(2);
   });
 
-  const cases = casesData?.cases ?? [];
+  const tracks = event?.tracks.filter((t) => t.seats_available > 0) ?? [];
 
   return (
     <div className="max-w-lg">
       <PageHeader
         title="Регистрация команды"
-        description="Пошаговая регистрация по инвайт-коду"
+        description={
+          captain
+            ? `Капитан: ${captain.full_name} (${captain.email})`
+            : "Загрузка профиля…"
+        }
       />
       <Stepper steps={STEPS} currentStep={step} className="mb-8" />
 
       {step === 0 && (
         <div className="flex flex-col gap-4">
-          <label className="text-sm font-medium">Кейс</label>
-          <Select value={caseId} onValueChange={setCaseId}>
+          <label className="text-sm font-medium">Кейс / направление</label>
+          <Select
+            value={trackId ? String(trackId) : ""}
+            onValueChange={(v) => setTrackId(Number(v))}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Выберите кейс" />
             </SelectTrigger>
             <SelectContent>
-              {cases.map((c: ApiSchemas["Case"]) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name} (свободно: {c.free})
+              {tracks.map((track) => (
+                <SelectItem key={track.id} value={String(track.id)}>
+                  {track.title} (свободно: {track.seats_available})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {cases.length === 0 && (
+          {tracks.length === 0 && (
             <p className="text-muted-foreground text-sm">Нет свободных кейсов</p>
           )}
           <div className="flex gap-2">
-            <Button onClick={() => setStep(1)} disabled={!caseId}>
+            <Button onClick={() => setStep(1)} disabled={!trackId}>
               Далее
             </Button>
           </div>
@@ -195,29 +222,19 @@ function EventRegisterPage() {
       {step === 1 && (
         <Form {...teamForm}>
           <form onSubmit={onTeamNext} className="flex flex-col gap-4">
-            {(
-              [
-                ["name", "Название команды"],
-                ["captainName", "Капитан"],
-                ["email", "Email"],
-                ["phone", "Телефон"],
-              ] as const
-            ).map(([name, label]) => (
-              <FormField
-                key={name}
-                control={teamForm.control}
-                name={name}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
+            <FormField
+              control={teamForm.control}
+              name="team_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Название команды</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setStep(0)}>
                 Назад
@@ -230,8 +247,8 @@ function EventRegisterPage() {
 
       {step === 2 && (
         <Form {...inviteForm}>
-          <form onSubmit={onInvite} className="flex flex-col gap-4">
-            <p className="text-muted-foreground text-sm">Демо-код: INVITE2026</p>
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <p className="text-muted-foreground text-sm">Демо-код: DEMO2026</p>
             <FormField
               control={inviteForm.control}
               name="code"
@@ -250,56 +267,20 @@ function EventRegisterPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setStep(1)}
-                disabled={verifyMutation.isPending || registerMutation.isPending}
+                disabled={registerMutation.isPending}
               >
                 Назад
               </Button>
-              <Button
-                type="submit"
-                disabled={verifyMutation.isPending || registerMutation.isPending}
-              >
-                {verifyMutation.isPending || registerMutation.isPending
-                  ? "Проверка..."
-                  : "Зарегистрировать"}
+              <Button type="submit" disabled={registerMutation.isPending}>
+                {registerMutation.isPending ? "Регистрация..." : "Зарегистрировать"}
               </Button>
             </div>
           </form>
         </Form>
       )}
 
-      {step === 3 && success && (
-        <div className="border-border bg-card space-y-4 rounded-2xl border p-6">
-          <h2 className="text-lg font-semibold">Регистрация завершена</h2>
-          <p className="text-muted-foreground text-sm">
-            Сохраните данные для входа в личный кабинет капитана.
-          </p>
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Логин</dt>
-              <dd className="font-mono font-medium">{success.login}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Пароль</dt>
-              <dd className="font-mono font-medium">{success.password}</dd>
-            </div>
-          </dl>
-          {success.emailSent ? (
-            <p className="text-sm text-green-700 dark:text-green-400">
-              Письмо с данными отправлено на указанный email.
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Email не отправлен (демо-режим).
-            </p>
-          )}
-          <Button asChild>
-            <Link to={ROUTES.LOGIN}>Войти</Link>
-          </Button>
-        </div>
-      )}
-
       <Button asChild variant="link" className="mt-6 px-0">
-        <Link to={ROUTES.HOME}>На главную</Link>
+        <Link to={pathTo(ROUTES.EVENT, { slug })}>← К мероприятию</Link>
       </Button>
     </div>
   );

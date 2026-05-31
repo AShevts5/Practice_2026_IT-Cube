@@ -4,9 +4,10 @@ import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { EventCard } from "./ui/event-card";
 
 function HomePage() {
-  const { data, isPending, isError } = publicRqClient.useQuery("get", "/events", {
-    params: { query: { publicOnly: true } },
-  });
+  const { data: events, isPending, isError } = publicRqClient.useQuery(
+    "get",
+    "/public/events",
+  );
 
   if (isPending) {
     return (
@@ -14,7 +15,7 @@ function HomePage() {
         <PageHeader title="Мероприятия" description="Загрузка…" />
         <div className="flex flex-col gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-2xl" />
+            <Skeleton key={i} className="h-44 w-full rounded-2xl" />
           ))}
         </div>
       </>
@@ -25,9 +26,7 @@ function HomePage() {
     return <p className="text-destructive">Не удалось загрузить мероприятия</p>;
   }
 
-  const events = data?.events ?? [];
-
-  if (events.length === 0) {
+  if (!events?.length) {
     return (
       <p className="text-muted-foreground py-12 text-center">Мероприятий пока нет</p>
     );

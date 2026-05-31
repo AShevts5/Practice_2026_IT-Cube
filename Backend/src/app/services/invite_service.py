@@ -57,6 +57,7 @@ class InviteService:
                     code=plain,
                     label=label,
                     is_used=False,
+                    used_at=None,
                     created_at=invite.created_at.isoformat(),
                 )
             )
@@ -88,5 +89,6 @@ class InviteService:
             code=normalized,
             label=label,
             is_used=False,
+            used_at=None,
             created_at=invite.created_at.isoformat(),
         )

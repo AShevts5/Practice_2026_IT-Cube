@@ -1,33 +1,50 @@
-import { publicRqClient } from "@/shared/api/instance";
-import type { ApiSchemas } from "@/shared/api/schema/index.ts";
-import { ROUTES } from "@/shared/model/routes";
+import { authService } from "@/shared/api/services/auth";
+import { ROUTES, buildAuthRedirectPath } from "@/shared/model/routes";
 import { useSession } from "@/shared/model/session";
-import { useNavigate } from "react-router-dom";
+import { getErrorMessage, parseApiError } from "@/shared/lib/errors.ts";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function useRegister() {
   const navigate = useNavigate();
-  const session = useSession();
+  const [searchParams] = useSearchParams();
+  const { login } = useSession();
+  const [isPending, setIsPending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>();
 
-  const registerMutation = publicRqClient.useMutation("post", "/auth/register", {
-    onSuccess(data) {
-      session.setTempToken(data.tempToken);
-      toast.success("Подтвердите вход кодом из SMS");
-      navigate(ROUTES.VERIFY_2FA);
-    },
-  });
+  const register = async (data: {
+    email: string;
+    password: string;
+    full_name: string;
+    phone: string;
+  }) => {
+    setIsPending(true);
+    setErrorMessage(undefined);
 
-  const register = (data: ApiSchemas["RegisterRequest"]) => {
-    registerMutation.mutate({ body: data });
+    try {
+      const response = await authService.registerCaptain(data);
+      if (response.error || !response.data?.access_token) {
+        const parsed = response.response ? await parseApiError(response.response) : null;
+        setErrorMessage(getErrorMessage(parsed, "Не удалось зарегистрироваться"));
+        return;
+      }
+
+      login(response.data.access_token);
+      toast.success("Аккаунт капитана создан");
+      const next = searchParams.get("next");
+      navigate(buildAuthRedirectPath(next));
+    } catch {
+      setErrorMessage("Не удалось зарегистрироваться");
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  const errorMessage = registerMutation.isError
-    ? registerMutation.error.message
-    : undefined;
+  return { register, isPending, errorMessage };
+}
 
-  return {
-    register,
-    isPending: registerMutation.isPending,
-    errorMessage,
-  };
+export function captainRegisterPath(next?: string) {
+  if (!next) return ROUTES.REGISTER;
+  return `${ROUTES.REGISTER}?next=${encodeURIComponent(next)}`;
 }

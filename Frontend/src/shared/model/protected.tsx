@@ -4,20 +4,28 @@ import type { UserRole } from "@/shared/model/session";
 import { useSession } from "@/shared/model/session";
 
 export function ProtectedRoute() {
-  const { session } = useSession();
+  const { isAuthenticated, otpChallenge } = useSession();
 
-  if (!session?.twoFaVerified) {
+  if (otpChallenge) {
     return <Navigate to={ROUTES.VERIFY_2FA} replace />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return <Outlet />;
 }
 
 export function RoleRoute({ role }: { role: UserRole }) {
-  const { session } = useSession();
+  const { session, isAuthenticated, otpChallenge } = useSession();
 
-  if (!session?.twoFaVerified) {
+  if (otpChallenge) {
     return <Navigate to={ROUTES.VERIFY_2FA} replace />;
+  }
+
+  if (!isAuthenticated || !session) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   if (session.role !== role) {
@@ -32,14 +40,18 @@ export function RoleRoute({ role }: { role: UserRole }) {
 }
 
 export function CaptainOnlyRoute() {
-  const { session } = useSession();
+  const { session, isAuthenticated, otpChallenge } = useSession();
 
-  if (!session?.twoFaVerified) {
+  if (otpChallenge) {
     return <Navigate to={ROUTES.VERIFY_2FA} replace />;
   }
 
-  if (session.role !== "team") {
-    return <Navigate to={getCabinetHomeRoute(session.role)} replace />;
+  if (!isAuthenticated || !session) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+
+  if (session.role !== "captain") {
+    return <Navigate to={ROUTES.CABINET_DASHBOARD} replace />;
   }
 
   return <Outlet />;

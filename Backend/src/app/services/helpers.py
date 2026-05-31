@@ -30,6 +30,7 @@ async def build_track_public(
         title=track.title,
         slug=track.slug,
         description=track.description,
+        keywords=track.keywords,
         team_limit=track.team_limit,
         teams_registered=occupied,
         seats_available=available,

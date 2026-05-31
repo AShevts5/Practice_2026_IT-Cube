@@ -16,12 +16,13 @@ export type CabinetNavItem = {
   to?: string;
   icon: LucideIcon;
   disabled?: boolean;
+  requiresManage?: boolean;
 };
 
 export const CABINET_NAV: CabinetNavItem[] = [
-  { label: "Личная информация", to: ROUTES.CABINET_EDIT, icon: UserIcon },
   { label: "Команда", to: ROUTES.CABINET_DASHBOARD, icon: UsersIcon },
-  { label: "Кейсы", to: ROUTES.CABINET_CHANGE_CASE, icon: LayoutGridIcon },
+  { label: "Личная информация", to: ROUTES.CABINET_EDIT, icon: UserIcon, requiresManage: true },
+  { label: "Кейсы", to: ROUTES.CABINET_CHANGE_CASE, icon: LayoutGridIcon, requiresManage: true },
   { label: "История", to: ROUTES.CABINET_HISTORY, icon: ClockIcon },
   { label: "Материал кейса", icon: BookOpenIcon, disabled: true },
   { label: "Загрузка решения", icon: FileUpIcon, disabled: true },

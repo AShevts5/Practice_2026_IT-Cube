@@ -8,6 +8,7 @@ from app.db.base import Base
 
 class OtpPurpose(str, enum.Enum):
     TEAM_LOGIN = "team_login"
+    CAPTAIN_LOGIN = "captain_login"
     ADMIN_LOGIN = "admin_login"
 
 
@@ -24,6 +25,7 @@ class OtpChallenge(Base):
             OtpPurpose,
             name="otp_purpose",
             native_enum=False,
+            length=32,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,

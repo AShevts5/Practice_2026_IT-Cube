@@ -2,21 +2,30 @@ import { fetchClient } from "../instance.ts";
 import type { ApiSchemas } from "../schema/index.ts";
 
 export const adminService = {
-  async getStats() {
-    return fetchClient.GET("/admin/stats");
+  async listEvents() {
+    return fetchClient.GET("/admin/events");
   },
 
-  async listEvents(params?: { page?: number; status?: string }) {
-    return fetchClient.GET("/admin/events", { params: { query: params } });
-  },
-
-  async createEvent(body: ApiSchemas["CreateEventRequest"]) {
+  async createEvent(body: ApiSchemas["EventCreate"]) {
     return fetchClient.POST("/admin/events", { body });
   },
 
-  async listTeams(eventId: string) {
-    return fetchClient.GET("/admin/events/{eventId}/teams", {
-      params: { path: { eventId } },
+  async updateEvent(eventId: number, body: ApiSchemas["EventUpdate"]) {
+    return fetchClient.PATCH("/admin/events/{event_id}", {
+      params: { path: { event_id: eventId } },
+      body,
+    });
+  },
+
+  async listTeams(eventId: number) {
+    return fetchClient.GET("/admin/teams/events/{event_id}/teams", {
+      params: { path: { event_id: eventId } },
+    });
+  },
+
+  async listInvites(eventId: number) {
+    return fetchClient.GET("/admin/invites/events/{event_id}", {
+      params: { path: { event_id: eventId } },
     });
   },
 };

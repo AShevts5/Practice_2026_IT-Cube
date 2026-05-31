@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.security import generate_password, generate_team_login, hash_password, verify_code
+from app.db.models.captain import Captain
 from app.db.models.event import Event
 from app.db.models.invite_code import InviteCode
 from app.db.models.team import Team
@@ -32,8 +33,11 @@ class RegistrationService:
     async def register_team(
         self,
         event_slug: str,
+        captain: Captain,
         data: RegistrationRequest,
     ) -> RegistrationResponse:
+        if captain.team_id is not None:
+            raise ConflictError("У вас уже зарегистрирована команда")
         stmt = select(Event).where(Event.slug == event_slug).options(selectinload(Event.tracks))
         result = await self.db.execute(stmt)
         event = result.scalar_one_or_none()
@@ -66,9 +70,9 @@ class RegistrationService:
             track_id=track.id,
             invite_code_id=invite.id,
             name=data.team_name,
-            captain_full_name=data.captain_full_name,
-            email=str(data.email).lower(),
-            phone=data.phone,
+            captain_full_name=captain.full_name,
+            email=captain.email,
+            phone=captain.phone,
             login=login,
             password_hash=hash_password(plain_password),
         )
@@ -76,8 +80,12 @@ class RegistrationService:
         invite.used_at = datetime.now(UTC)
         await self.db.flush()
 
+        captain.team_id = team.id
+        await self.db.flush()
+
         return RegistrationResponse(
             team_id=team.id,
             login=login,
             password=plain_password,
+            message="Передайте логин и пароль участникам команды. Капитан входит в кабинет со своим аккаунтом",
         )

@@ -7,6 +7,7 @@ from app.config import settings
 from app.core.exceptions import UnauthorizedError, ValidationError
 from app.core.security import create_access_token, verify_password
 from app.db.models.admin_user import AdminUser
+from app.db.models.captain import Captain
 from app.db.models.otp_challenge import OtpChallenge, OtpChannel, OtpPurpose
 from app.db.models.team import Team
 from app.integrations.email import SmtpEmailSender
@@ -79,6 +80,52 @@ class AuthService:
         token = create_access_token(str(challenge.subject_id), "team")
         return TokenResponse(access_token=token)
 
+    async def start_captain_login(self, login: str, password: str) -> dict:
+        email = login.strip().lower()
+        result = await self.db.execute(
+            select(Captain).where(Captain.email == email, Captain.is_active.is_(True))
+        )
+        captain = result.scalar_one_or_none()
+        if captain is None or not verify_password(password, captain.password_hash):
+            raise UnauthorizedError("Неверный email или пароль")
+
+        challenge, plain = await self.otp.create_challenge(
+            purpose=OtpPurpose.CAPTAIN_LOGIN,
+            channel=OtpChannel.EMAIL,
+            subject_type="captain",
+            subject_id=captain.id,
+            destination=captain.email,
+        )
+        await self._send_otp(challenge, plain)
+        return {
+            "challenge_id": challenge.id,
+            "channel": challenge.channel.value,
+            "message": "Код отправлен на email капитана",
+        }
+
+    async def resend_captain_otp(self, challenge_id: int, *, channel: str) -> dict:
+        challenge = await self._get_challenge(challenge_id, OtpPurpose.CAPTAIN_LOGIN)
+        await self._check_resend_allowed(challenge)
+        otp_channel = OtpChannel.SMS if channel == "sms" else OtpChannel.EMAIL
+        captain = await self._get_captain(challenge.subject_id)
+        destination = captain.phone if otp_channel == OtpChannel.SMS else captain.email
+        new_challenge, plain = await self.otp.create_challenge(
+            purpose=OtpPurpose.CAPTAIN_LOGIN,
+            channel=otp_channel,
+            subject_type="captain",
+            subject_id=captain.id,
+            destination=destination,
+        )
+        await self._send_otp(new_challenge, plain)
+        return {"challenge_id": new_challenge.id, "channel": new_challenge.channel.value}
+
+    async def verify_captain_otp(self, challenge_id: int, code: str) -> TokenResponse:
+        challenge = await self._get_challenge(challenge_id, OtpPurpose.CAPTAIN_LOGIN)
+        if not await self.otp.verify(challenge, code):
+            raise ValidationError("Неверный или просроченный код подтверждения")
+        token = create_access_token(str(challenge.subject_id), "captain")
+        return TokenResponse(access_token=token)
+
     async def start_admin_login(self, login: str, password: str) -> dict:
         email = login.strip().lower()
         result = await self.db.execute(
@@ -142,6 +189,13 @@ class AuthService:
         if team is None:
             raise UnauthorizedError("Команда не найдена")
         return team
+
+    async def _get_captain(self, captain_id: int) -> Captain:
+        result = await self.db.execute(select(Captain).where(Captain.id == captain_id))
+        captain = result.scalar_one_or_none()
+        if captain is None:
+            raise UnauthorizedError("Капитан не найден")
+        return captain
 
     async def _get_admin(self, admin_id: int) -> AdminUser:
         result = await self.db.execute(select(AdminUser).where(AdminUser.id == admin_id))

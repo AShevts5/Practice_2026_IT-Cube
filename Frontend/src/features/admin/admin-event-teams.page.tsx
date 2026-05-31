@@ -4,30 +4,25 @@ import { useSession } from "@/shared/model/session";
 import { ROUTES } from "@/shared/model/routes";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
 import { Button } from "@/shared/ui/kit/button";
-import { Input } from "@/shared/ui/kit/input";
-import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 function AdminEventTeamsPage() {
   const { eventId } = useParams();
   const { token } = useSession();
-  const [search, setSearch] = useState("");
+  const numericId = Number(eventId);
 
-  const { data, isPending, isError } = rqClient.useQuery(
+  const { data: teams, isPending, isError } = rqClient.useQuery(
     "get",
-    "/admin/events/{eventId}/teams",
+    "/admin/teams/events/{event_id}/teams",
     {
-      params: {
-        path: { eventId: eventId! },
-        query: search ? { search } : undefined,
-      },
+      params: { path: { event_id: numericId } },
     },
-    { enabled: Boolean(eventId) },
+    { enabled: Number.isFinite(numericId) },
   );
 
   const exportCsv = async () => {
     const res = await fetch(
-      `${CONFIG.API_BASE_URL}/admin/events/${eventId}/teams/export`,
+      `${CONFIG.API_BASE_URL}/admin/export/events/${eventId}/registrations.csv`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     const blob = await res.blob();
@@ -49,8 +44,6 @@ function AdminEventTeamsPage() {
     return <p className="text-destructive">Ошибка загрузки</p>;
   }
 
-  const teams = data?.teams ?? [];
-
   return (
     <div>
       <PageHeader
@@ -67,12 +60,6 @@ function AdminEventTeamsPage() {
           </>
         }
       />
-      <Input
-        className="mb-4 max-w-sm"
-        placeholder="Поиск по названию или email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
       <div className="overflow-x-auto rounded-2xl border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
@@ -86,22 +73,22 @@ function AdminEventTeamsPage() {
             </tr>
           </thead>
           <tbody>
-            {teams.map((team) => (
+            {(teams ?? []).map((team) => (
               <tr key={team.id} className="border-t">
                 <td className="px-4 py-3">{team.name}</td>
-                <td className="px-4 py-3">{team.captainName}</td>
+                <td className="px-4 py-3">{team.captain_full_name}</td>
                 <td className="px-4 py-3">{team.email}</td>
                 <td className="px-4 py-3">{team.phone}</td>
-                <td className="px-4 py-3">{team.caseName}</td>
+                <td className="px-4 py-3">{team.track_title}</td>
                 <td className="px-4 py-3">
-                  {new Date(team.registeredAt).toLocaleDateString("ru-RU")}
+                  {new Date(team.created_at).toLocaleDateString("ru-RU")}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {teams.length === 0 && (
+      {(teams ?? []).length === 0 && (
         <p className="text-muted-foreground mt-4 text-center">Команд нет</p>
       )}
     </div>

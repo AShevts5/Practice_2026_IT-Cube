@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Events Platform API
-  description: API for events registration, captain cabinet and admin panel
-  version: 2.1.0
+  title: IT-Cube Platform API
+  version: 1.0.0
+  description: Backend API (FastAPI) — registration, auth, team cabinet, admin
 
 components:
   securitySchemes:
@@ -11,143 +11,1135 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  schemas:
+    Error:
+      type: object
+      properties:
+        detail:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+
+    LoginRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+
+    CaptainRegisterRequest:
+      type: object
+      required: [email, password, full_name, phone]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        full_name:
+          type: string
+        phone:
+          type: string
+
+    CaptainProfile:
+      type: object
+      required: [id, email, full_name, phone, has_team]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        phone:
+          type: string
+        has_team:
+          type: boolean
+        team_id:
+          type: integer
+          nullable: true
+
+    OtpChallengeResponse:
+      type: object
+      required: [challenge_id, channel, message]
+      properties:
+        challenge_id:
+          type: integer
+        channel:
+          type: string
+        message:
+          type: string
+
+    OtpRequest:
+      type: object
+      required: [challenge_id]
+      properties:
+        challenge_id:
+          type: integer
+        channel:
+          type: string
+          enum: [email, sms]
+          default: email
+
+    OtpVerifyRequest:
+      type: object
+      required: [challenge_id, code]
+      properties:
+        challenge_id:
+          type: integer
+        code:
+          type: string
+
+    TokenResponse:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+
+    EventStatus:
+      type: string
+      enum:
+        - draft
+        - published
+        - registration_open
+        - registration_closed
+        - finished
+
+    EventCard:
+      type: object
+      required:
+        - id
+        - title
+        - slug
+        - description
+        - keywords
+        - brand
+        - status
+        - registration_open
+        - total_seats_available
+        - total_seats_limit
+        - total_teams_registered
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+          description: Ключевые слова через запятую
+        brand:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: "#/components/schemas/EventStatus"
+        registration_open:
+          type: boolean
+        total_seats_available:
+          type: integer
+        total_seats_limit:
+          type: integer
+        total_teams_registered:
+          type: integer
+
+    TrackPublic:
+      type: object
+      required:
+        - id
+        - title
+        - slug
+        - description
+        - keywords
+        - team_limit
+        - teams_registered
+        - seats_available
+        - registration_status
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+        team_limit:
+          type: integer
+        teams_registered:
+          type: integer
+        seats_available:
+          type: integer
+        registration_status:
+          type: string
+
+    EventDetail:
+      allOf:
+        - $ref: "#/components/schemas/EventCard"
+        - type: object
+          required: [tracks]
+          properties:
+            tracks:
+              type: array
+              items:
+                $ref: "#/components/schemas/TrackPublic"
+
+    RegistrationRequest:
+      type: object
+      required:
+        - track_id
+        - team_name
+        - invite_code
+      properties:
+        track_id:
+          type: integer
+        team_name:
+          type: string
+        invite_code:
+          type: string
+
+    RegistrationResponse:
+      type: object
+      required: [team_id, login, password, message]
+      properties:
+        team_id:
+          type: integer
+        login:
+          type: string
+        password:
+          type: string
+        message:
+          type: string
+
+    TeamCabinet:
+      type: object
+      required:
+        - id
+        - team_name
+        - captain_full_name
+        - email
+        - phone
+        - event_title
+        - event_slug
+        - track_title
+        - track_id
+        - can_edit
+        - can_manage
+      properties:
+        id:
+          type: integer
+        team_name:
+          type: string
+        captain_full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        event_title:
+          type: string
+        event_slug:
+          type: string
+        track_title:
+          type: string
+        track_id:
+          type: integer
+        can_edit:
+          type: boolean
+          description: Регистрация открыта — период, когда допускаются изменения
+        can_manage:
+          type: boolean
+          description: Капитан может редактировать данные и менять кейс
+
+    TeamUpdate:
+      type: object
+      properties:
+        team_name:
+          type: string
+        captain_full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        track_id:
+          type: integer
+
+    TrackCreate:
+      type: object
+      required: [title, slug, team_limit]
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+          description: Ключевые слова через запятую
+        team_limit:
+          type: integer
+
+    TrackUpsert:
+      type: object
+      required: [title, slug, team_limit]
+      properties:
+        id:
+          type: integer
+          description: ID существующего кейса; без id — создать новый
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+          description: Ключевые слова через запятую
+        team_limit:
+          type: integer
+
+    EventCreate:
+      type: object
+      required: [title, slug]
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+        brand:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        tracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrackCreate"
+
+    EventUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+        brand:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: "#/components/schemas/EventStatus"
+        tracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrackUpsert"
+
+    EventAdmin:
+      type: object
+      required: [id, title, slug, description, keywords, brand, status, tracks]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+        brand:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: "#/components/schemas/EventStatus"
+        tracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrackPublic"
+
+    TeamAdmin:
+      type: object
+      required:
+        - id
+        - name
+        - captain_full_name
+        - email
+        - phone
+        - track_title
+        - created_at
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        captain_full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        track_title:
+          type: string
+        created_at:
+          type: string
+
+    TrackStats:
+      type: object
+      required: [track_id, track_title, limit, occupied, available, status]
+      properties:
+        track_id:
+          type: integer
+        track_title:
+          type: string
+        limit:
+          type: integer
+        occupied:
+          type: integer
+        available:
+          type: integer
+        status:
+          type: string
+
+    InviteCode:
+      type: object
+      required: [id, label, is_used, used_at, created_at]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+          nullable: true
+        is_used:
+          type: boolean
+        used_at:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+
+    InviteCodeGenerated:
+      allOf:
+        - $ref: "#/components/schemas/InviteCode"
+        - type: object
+          required: [code]
+          properties:
+            code:
+              type: string
+
+    InviteGenerate:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+          minimum: 1
+          maximum: 500
+        label_prefix:
+          type: string
+          nullable: true
+
+    InviteCodeCreate:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+          nullable: true
+
+    Board:
+      type: object
+      required: [id, name, isFavorite, lastOpenedAt, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        isFavorite:
+          type: boolean
+        lastOpenedAt:
+          type: string
+        createdAt:
+          type: string
+
+    BoardListResponse:
+      type: object
+      required: [list, totalPages]
+      properties:
+        list:
+          type: array
+          items:
+            $ref: "#/components/schemas/Board"
+        totalPages:
+          type: integer
+
 paths:
-  /auth/login:
-    post:
-      $ref: "./endpoints/auth.yaml#/login"
-
-  /auth/verify-2fa:
-    post:
-      $ref: "./endpoints/auth.yaml#/verify2fa"
-
-  /auth/forgot-password:
-    post:
-      $ref: "./endpoints/auth.yaml#/forgotPassword"
-
-  /auth/reset-password/{token}:
-    post:
-      $ref: "./endpoints/auth.yaml#/resetPassword"
-
-  /auth/register:
-    post:
-      $ref: "./endpoints/auth.yaml#/register"
-
-  /auth/refresh:
-    post:
-      $ref: "./endpoints/auth.yaml#/refresh"
-
-  /events:
+  /public/events:
     get:
-      $ref: "./endpoints/events.yaml#/listEvents"
+      operationId: listPublicEvents
+      tags: [public]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventCard"
 
-  /events/{slug}:
+  /public/events/{slug}:
     get:
-      $ref: "./endpoints/events.yaml#/getEventBySlug"
+      operationId: getPublicEvent
+      tags: [public]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventDetail"
 
-  /events/{slug}/cases:
-    get:
-      $ref: "./endpoints/events.yaml#/getEventCases"
-
-  /events/{slug}/verify-invite-code:
+  /registration/events/{event_slug}/teams:
     post:
-      $ref: "./endpoints/events.yaml#/verifyInviteCode"
+      operationId: registerTeam
+      tags: [registration]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationResponse"
 
-  /events/{slug}/register:
+  /auth/captain/register:
     post:
-      $ref: "./endpoints/events.yaml#/registerTeam"
+      operationId: captainRegister
+      tags: [auth-captain]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptainRegisterRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
 
-  /cabinet/team:
-    get:
-      $ref: "./endpoints/cabinet.yaml#/getTeam"
-    put:
-      $ref: "./endpoints/cabinet.yaml#/updateTeam"
-
-  /cabinet/available-cases:
-    get:
-      $ref: "./endpoints/cabinet.yaml#/getAvailableCases"
-
-  /cabinet/available-events:
-    get:
-      $ref: "./endpoints/cabinet.yaml#/getAvailableEvents"
-
-  /cabinet/change-case:
+  /auth/captain/login:
     post:
-      $ref: "./endpoints/cabinet.yaml#/changeCase"
+      operationId: captainLogin
+      tags: [auth-captain]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
 
-  /cabinet/change-event:
+  /auth/captain/otp/send:
     post:
-      $ref: "./endpoints/cabinet.yaml#/changeEvent"
+      operationId: captainOtpSend
+      tags: [auth-captain]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
 
-  /cabinet/history:
-    get:
-      $ref: "./endpoints/cabinet.yaml#/getHistory"
+  /auth/captain/otp/verify:
+    post:
+      operationId: captainOtpVerify
+      tags: [auth-captain]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
 
-  /admin/stats:
+  /captain/me:
     get:
-      $ref: "./endpoints/admin.yaml#/getStats"
+      operationId: getCaptainProfile
+      tags: [captain]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptainProfile"
+
+  /auth/team/login:
+    post:
+      operationId: teamLogin
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
+
+  /auth/team/otp/send:
+    post:
+      operationId: teamOtpSend
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
+
+  /auth/team/otp/verify:
+    post:
+      operationId: teamOtpVerify
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+
+  /auth/admin/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
+
+  /auth/admin/otp/send:
+    post:
+      operationId: adminOtpSend
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallengeResponse"
+
+  /auth/admin/otp/verify:
+    post:
+      operationId: adminOtpVerify
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+
+  /team/me:
+    get:
+      operationId: getTeamCabinet
+      tags: [team]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamCabinet"
+    patch:
+      operationId: updateTeamCabinet
+      tags: [team]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamCabinet"
 
   /admin/events:
     get:
-      $ref: "./endpoints/admin.yaml#/listAdminEvents"
+      operationId: listAdminEvents
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventAdmin"
     post:
-      $ref: "./endpoints/admin.yaml#/createEvent"
+      operationId: createAdminEvent
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventAdmin"
 
-  /admin/events/{eventId}:
-    put:
-      $ref: "./endpoints/admin.yaml#/updateEvent"
-    delete:
-      $ref: "./endpoints/admin.yaml#/deleteEvent"
+  /admin/events/{event_id}:
+    patch:
+      operationId: updateAdminEvent
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventAdmin"
 
-  /admin/events/{eventId}/cases:
-    get:
-      $ref: "./endpoints/admin.yaml#/listEventCases"
+  /admin/events/{event_id}/finish:
     post:
-      $ref: "./endpoints/admin.yaml#/createEventCase"
+      operationId: finishAdminEvent
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventAdmin"
 
-  /admin/events/{eventId}/cases/{caseId}:
-    put:
-      $ref: "./endpoints/admin.yaml#/updateEventCase"
-    delete:
-      $ref: "./endpoints/admin.yaml#/deleteEventCase"
-
-  /admin/events/{eventId}/invite-codes:
+  /admin/invites/events/{event_id}:
     get:
-      $ref: "./endpoints/admin.yaml#/listInviteCodes"
+      operationId: listEventInvites
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InviteCode"
     post:
-      $ref: "./endpoints/admin.yaml#/createInviteCode"
+      operationId: createEventInvite
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCodeCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteCodeGenerated"
 
-  /admin/events/{eventId}/invite-codes/generate:
+  /admin/invites/events/{event_id}/generate:
     post:
-      $ref: "./endpoints/admin.yaml#/generateInviteCodes"
+      operationId: generateEventInvites
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteGenerate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InviteCodeGenerated"
 
-  /admin/events/{eventId}/invite-codes/{codeId}:
-    delete:
-      $ref: "./endpoints/admin.yaml#/deleteInviteCode"
-
-  /admin/events/{eventId}/teams:
+  /admin/teams/events/{event_id}/teams:
     get:
-      $ref: "./endpoints/admin.yaml#/listEventTeams"
+      operationId: listEventTeams
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamAdmin"
 
-  /admin/events/{eventId}/teams/export:
+  /admin/teams/events/{event_id}/stats:
     get:
-      $ref: "./endpoints/admin.yaml#/exportEventTeams"
+      operationId: listEventTrackStats
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrackStats"
+
+  /admin/export/events/{event_id}/registrations.csv:
+    get:
+      operationId: exportEventRegistrations
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: CSV export
+          content:
+            text/csv:
+              schema:
+                type: string
 
   /boards:
     get:
-      $ref: "./endpoints/boards.yaml#/getAllBoards"
+      operationId: listBoards
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: favorites
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Mock boards list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardListResponse"
     post:
-      $ref: "./endpoints/boards.yaml#/createBoard"
+      operationId: createBoard
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Created board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
 
   /boards/{boardId}:
     get:
-      $ref: "./endpoints/boards.yaml#/getBoardById"
+      operationId: getBoard
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
     delete:
-      $ref: "./endpoints/boards.yaml#/deleteBoard"
+      operationId: deleteBoard
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 
   /boards/{boardId}/favorite:
     put:
-      $ref: "./endpoints/boards.yaml#/updateBoardFavorite"
+      operationId: updateBoardFavorite
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isFavorite]
+              properties:
+                isFavorite:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
 
   /boards/{boardId}/rename:
     put:
-      $ref: "./endpoints/boards.yaml#/renameBoard"
+      operationId: renameBoard
+      tags: [boards-mock]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"

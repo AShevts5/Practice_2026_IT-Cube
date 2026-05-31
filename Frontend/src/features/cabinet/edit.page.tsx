@@ -15,34 +15,34 @@ import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(2),
-  captainName: z.string().min(2),
+  team_name: z.string().min(2),
+  captain_full_name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(10),
 });
 
 function CabinetEditPage() {
   const navigate = useNavigate();
-  const { data: team, isPending } = rqClient.useQuery("get", "/cabinet/team");
+  const { data: team, isPending } = rqClient.useQuery("get", "/team/me");
   const form = useForm({ resolver: zodResolver(schema) });
 
   useEffect(() => {
     if (team) {
       form.reset({
-        name: team.name,
-        captainName: team.captainName,
+        team_name: team.team_name,
+        captain_full_name: team.captain_full_name,
         email: team.email,
         phone: team.phone,
       });
     }
   }, [team, form]);
 
-  const mutation = rqClient.useMutation("put", "/cabinet/team", {
+  const mutation = rqClient.useMutation("patch", "/team/me", {
     onSuccess() {
       toast.success("Данные сохранены");
       navigate(ROUTES.CABINET_DASHBOARD);
@@ -51,6 +51,25 @@ function CabinetEditPage() {
 
   if (isPending) {
     return <Skeleton className="h-64 w-full rounded-2xl" />;
+  }
+
+  if (team && !team.can_manage) {
+    return (
+      <div>
+        <CabinetPageHeader
+          title="Личная информация"
+          description="Редактирование недоступно"
+        />
+        <p className="text-muted-foreground mb-4 text-sm">
+          {!team.can_edit
+            ? "Регистрация на мероприятие закрыта — данные команды нельзя изменить."
+            : "Редактирование доступно только капитану команды."}
+        </p>
+        <Button asChild variant="outline">
+          <Link to={ROUTES.CABINET_DASHBOARD}>← К команде</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -67,8 +86,8 @@ function CabinetEditPage() {
           >
             {(
               [
-                ["name", "Название команды"],
-                ["captainName", "ФИО капитана"],
+                ["team_name", "Название команды"],
+                ["captain_full_name", "ФИО капитана"],
                 ["email", "Email"],
                 ["phone", "Телефон"],
               ] as const

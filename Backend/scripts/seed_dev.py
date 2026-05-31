@@ -1,4 +1,6 @@
 import asyncio
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 
 from app.config import settings
@@ -19,6 +21,7 @@ DEMO_TRACKS = [
             "и отслеживания статуса участия в хакатонах. "
             "Технологии: React, Node.js, PostgreSQL, Redis, Docker."
         ),
+        "keywords": "React, Node.js, PostgreSQL, Redis, Docker",
         "team_limit": 25,
     },
     {
@@ -28,6 +31,7 @@ DEMO_TRACKS = [
             "СБЕР. Создать модульную LMS с треками обучения, геймификацией "
             "и аналитикой успеваемости. Технологии: Vue, Python, MongoDB."
         ),
+        "keywords": "Vue, Python, MongoDB",
         "team_limit": 20,
     },
     {
@@ -37,6 +41,7 @@ DEMO_TRACKS = [
             "ГОСТЕХ. Чат-бот и портал для подачи обращений в органы власти "
             "с NLP-маршрутизацией. Технологии: TypeScript, FastAPI, Kafka."
         ),
+        "keywords": "TypeScript, FastAPI, Kafka",
         "team_limit": 18,
     },
     {
@@ -46,6 +51,7 @@ DEMO_TRACKS = [
             "ЯНДЕКС. Дашборд для транспортного департамента: тепловые карты потоков "
             "и прогноз загрузки. Технологии: React, D3.js, ClickHouse."
         ),
+        "keywords": "React, D3.js, ClickHouse",
         "team_limit": 15,
     },
 ]
@@ -76,6 +82,12 @@ async def seed() -> None:
                     "Образовательный хакатон с кейсами от МТС, СБЕР, ГОСТЕХ и ЯНДЕКС. "
                     "Команды выбирают направление и регистрируются по коду приглашения."
                 ),
+                keywords=(
+                    "React, TypeScript, Node.js, Python, FastAPI, PostgreSQL, Docker, JWT"
+                ),
+                brand="IT-КУБ",
+                starts_at=datetime(2026, 6, 1, 9, 0, tzinfo=UTC),
+                ends_at=datetime(2026, 6, 15, 18, 0, tzinfo=UTC),
                 status=EventStatus.REGISTRATION_OPEN,
             )
             session.add(event)
@@ -87,6 +99,7 @@ async def seed() -> None:
                         title=track["title"],
                         slug=track["slug"],
                         description=track["description"],
+                        keywords=track["keywords"],
                         team_limit=track["team_limit"],
                     )
                     for track in DEMO_TRACKS
@@ -103,6 +116,24 @@ async def seed() -> None:
             print(f"Event created: {event_slug}, invite code: DEMO2026")
             for track in DEMO_TRACKS:
                 print(f"  - {track['slug']}: {track['title']} (limit {track['team_limit']})")
+        elif not event.keywords:
+            event.keywords = (
+                "React, TypeScript, Node.js, Python, FastAPI, PostgreSQL, Docker, JWT"
+            )
+            event.brand = event.brand or "IT-КУБ"
+            event.starts_at = event.starts_at or datetime(2026, 6, 1, 9, 0, tzinfo=UTC)
+            event.ends_at = event.ends_at or datetime(2026, 6, 15, 18, 0, tzinfo=UTC)
+            print(f"Event metadata updated: {event_slug}")
+
+        if event is not None:
+            demo_by_slug = {track["slug"]: track for track in DEMO_TRACKS}
+            tracks_result = await session.execute(
+                select(Track).where(Track.event_id == event.id)
+            )
+            for track in tracks_result.scalars().all():
+                demo = demo_by_slug.get(track.slug)
+                if demo and not track.keywords:
+                    track.keywords = demo["keywords"]
 
         await session.commit()
     print("Seed completed. DATABASE_URL:", settings.database_url)

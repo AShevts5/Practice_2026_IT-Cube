@@ -18,7 +18,7 @@ export function AppHeader() {
           <ThemeToggle />
         {session ? (
           <>
-            <span className="text-muted-foreground text-sm">{session.email}</span>
+            <span className="text-muted-foreground text-sm">{session.role}</span>
             <Button
               variant="outline"
               size="sm"

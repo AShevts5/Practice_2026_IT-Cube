@@ -17,7 +17,7 @@ class PhoneNumber(str):
         try:
             parsed = phonenumbers.parse(value, "RU")
             if not phonenumbers.is_valid_number(parsed):
-                raise ValueError("invalid phone")
+                raise ValueError("Некорректный номер телефона")
             return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
         except phonenumbers.NumberParseException as exc:
-            raise ValueError("invalid phone") from exc
+            raise ValueError("Некорректный номер телефона") from exc

@@ -1,5 +1,3 @@
-"""Team captain auth: password + 2FA OTP."""
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 

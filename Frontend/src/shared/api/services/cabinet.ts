@@ -3,26 +3,10 @@ import type { ApiSchemas } from "../schema/index.ts";
 
 export const cabinetService = {
   async getTeam() {
-    return fetchClient.GET("/cabinet/team");
+    return fetchClient.GET("/team/me");
   },
 
-  async updateTeam(body: ApiSchemas["UpdateTeamRequest"]) {
-    return fetchClient.PUT("/cabinet/team", { body });
-  },
-
-  async getAvailableCases() {
-    return fetchClient.GET("/cabinet/available-cases");
-  },
-
-  async getAvailableEvents() {
-    return fetchClient.GET("/cabinet/available-events");
-  },
-
-  async changeCase(body: ApiSchemas["ChangeCaseRequest"]) {
-    return fetchClient.POST("/cabinet/change-case", { body });
-  },
-
-  async changeEvent(body: ApiSchemas["ChangeEventRequest"]) {
-    return fetchClient.POST("/cabinet/change-event", { body });
+  async updateTeam(body: ApiSchemas["TeamUpdate"]) {
+    return fetchClient.PATCH("/team/me", { body });
   },
 };

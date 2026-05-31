@@ -1,39 +1,45 @@
 import type { ApiSchemas } from "@/shared/api/schema/index.ts";
 import { publicRqClient } from "@/shared/api/instance";
+import { useCaptainProfile } from "@/features/auth/model/use-captain-profile";
+import { captainRegisterPath } from "@/features/auth/model/use-register";
 import {
   getEventBrand,
   getEventTags,
 } from "@/features/events-home/model/event-meta.ts";
-import { getCaseCatalogItem } from "@/features/cabinet";
-import { pathTo, ROUTES } from "@/shared/model/routes";
+import { pathTo, ROUTES, getCabinetHomeRoute } from "@/shared/model/routes";
 import { useSession } from "@/shared/model/session";
+import { hasTeamCabinetAccess, isGuest, isCaptain } from "@/shared/model/viewer-role";
 import { cn } from "@/shared/lib/css";
+import { KeywordTags } from "@/shared/ui/keyword-tags.tsx";
 import { Button } from "@/shared/ui/kit/button";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { Link } from "react-router-dom";
 import { CalendarIcon, ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
-const statusLabels: Record<ApiSchemas["Event"]["status"], string> = {
+type CardStatus = "active" | "completed" | "draft";
+
+const statusLabels: Record<CardStatus, string> = {
   active: "Активно",
   completed: "Завершено",
   draft: "Черновик",
 };
 
-const statusClass: Record<ApiSchemas["Event"]["status"], string> = {
+const statusClass: Record<CardStatus, string> = {
   active:
     "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-transparent dark:text-emerald-300",
-  completed:
-    "border-border bg-muted text-muted-foreground",
+  completed: "border-border bg-muted text-muted-foreground",
   draft:
     "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-transparent dark:text-amber-300",
 };
 
-const tagClass =
-  "rounded-lg border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 dark:border-violet-500/50 dark:bg-transparent dark:text-violet-300";
+function toCardStatus(status: ApiSchemas["EventStatus"]): CardStatus {
+  if (status === "registration_open" || status === "published") return "active";
+  if (status === "finished" || status === "registration_closed") return "completed";
+  return "draft";
+}
 
-function formatEventDates(startsAt?: string, endsAt?: string) {
+function formatEventDates(startsAt?: string | null, endsAt?: string | null) {
   if (!startsAt) return null;
   const start = new Date(startsAt).toLocaleDateString("ru-RU", {
     day: "numeric",
@@ -48,9 +54,8 @@ function formatEventDates(startsAt?: string, endsAt?: string) {
   return `${start} — ${end}`;
 }
 
-function caseOccupancyClasses(occupied: number, limit: number) {
+function trackOccupancyClasses(occupied: number, limit: number) {
   const ratio = limit > 0 ? occupied / limit : 0;
-
   if (ratio >= 0.8) {
     return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-transparent dark:text-rose-300";
   }
@@ -60,15 +65,15 @@ function caseOccupancyClasses(occupied: number, limit: number) {
   return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-transparent dark:text-emerald-300";
 }
 
-function EventCardCases({
+function EventCardTracks({
   slug,
-  cases,
+  tracks,
   expanded,
   isPending,
   isError,
 }: {
   slug: string;
-  cases: ApiSchemas["Case"][];
+  tracks: ApiSchemas["TrackPublic"][];
   expanded: boolean;
   isPending: boolean;
   isError: boolean;
@@ -93,41 +98,33 @@ function EventCardCases({
           ) : isError ? (
             <p className="text-destructive text-sm">Не удалось загрузить кейсы</p>
           ) : (
-            <>
-              <ul className="flex flex-col gap-2">
-                {cases.map((caseItem) => (
-                  <li key={caseItem.id}>
-                    <Link
-                      to={pathTo(ROUTES.EVENT_CASE, {
-                        slug,
-                        caseId: caseItem.id,
-                      })}
-                      className="group relative block rounded-xl border bg-muted/30 px-4 py-3 pr-16 text-sm transition-colors hover:bg-muted/45"
+            <ul className="flex flex-col gap-2">
+              {tracks.map((track) => (
+                <li key={track.id}>
+                  <Link
+                    to={pathTo(ROUTES.EVENT_CASE, {
+                      slug,
+                      caseId: String(track.id),
+                    })}
+                    className="group relative block rounded-xl border bg-muted/30 px-4 py-3 pr-16 text-sm transition-colors hover:bg-muted/45"
+                  >
+                    <span
+                      className={cn(
+                        "absolute right-4 top-3 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums",
+                        trackOccupancyClasses(track.teams_registered, track.team_limit),
+                      )}
                     >
-                      <span
-                        className={cn(
-                          "rounded-full border px-2.5 py-0.5 absolute right-4 top-3 text-xs font-semibold tabular-nums",
-                          caseOccupancyClasses(caseItem.occupied, caseItem.limit),
-                        )}
-                      >
-                        {caseItem.occupied}/{caseItem.limit}
-                      </span>
-                      <span className="font-medium leading-snug">
-                        {caseItem.name}
-                      </span>
-                      <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-snug">
-                        {
-                          getCaseCatalogItem(caseItem.id, caseItem.name, {
-                            description: caseItem.description,
-                            keywords: caseItem.keywords,
-                          }).description
-                        }
-                      </p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
+                      {track.teams_registered}/{track.team_limit}
+                    </span>
+                    <span className="font-medium leading-snug">{track.title}</span>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      Свободно: {track.seats_available}
+                    </p>
+                    <KeywordTags keywords={track.keywords} className="mt-2" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
@@ -135,34 +132,40 @@ function EventCardCases({
   );
 }
 
-export function EventCard({ event }: { event: ApiSchemas["Event"] }) {
+export function EventCard({ event }: { event: ApiSchemas["EventCard"] }) {
   const [expanded, setExpanded] = useState(false);
-  const { isAuthenticated, session } = useSession();
-  const {
-    data: casesData,
-    isPending: isCasesPending,
-    isError: isCasesError,
-  } = publicRqClient.useQuery("get", "/events/{slug}/cases", {
-    params: { path: { slug: event.slug } },
-  });
-  const cases = casesData?.cases ?? [];
-  const totalLimit = cases.reduce((sum, c) => sum + c.limit, 0);
-  const occupiedTotal = cases.reduce((sum, c) => sum + c.occupied, 0);
-  const tags = getEventTags(event.slug, event.keywords);
-  const brand = getEventBrand(event.slug);
-  const dates = formatEventDates(event.startsAt, event.endsAt);
-  const fewSpots = event.freeSpotsTotal <= 5 && event.freeSpotsTotal > 0;
+  const { viewerRole, session } = useSession();
+  const { data: captain } = useCaptainProfile();
+  const registerPath = pathTo(ROUTES.EVENT_REGISTER, { slug: event.slug });
+  const showCabinet = hasTeamCabinetAccess(viewerRole, captain?.has_team);
 
-  const handleRegisterClick = () => {
-    toast.info("Войдите в аккаунт, чтобы зарегистрировать команду");
-  };
+  const {
+    data: eventDetail,
+    isPending: isTracksPending,
+    isError: isTracksError,
+  } = publicRqClient.useQuery(
+    "get",
+    "/public/events/{slug}",
+    { params: { path: { slug: event.slug } } },
+  );
+
+  const tracks = eventDetail?.tracks ?? [];
+  const cardStatus = toCardStatus(event.status);
+  const tags = getEventTags(event.slug, event.keywords);
+  const brand = event.brand?.trim() || getEventBrand(event.slug);
+  const dates = formatEventDates(event.starts_at, event.ends_at);
+  const fewSpots = event.total_seats_available <= 5 && event.total_seats_available > 0;
+  const seatsLabel =
+    event.total_seats_limit > 0
+      ? `${event.total_teams_registered}/${event.total_seats_limit} мест`
+      : `${event.total_seats_available} мест`;
 
   return (
     <article
       className={cn(
         "relative w-full max-w-none rounded-2xl border bg-card p-4 pr-24 pt-4 shadow-sm transition-shadow",
         "hover:shadow-md dark:shadow-none",
-        event.status === "active"
+        cardStatus === "active"
           ? "border-border hover:border-violet-300/60 dark:hover:border-violet-500/40"
           : "border-border",
       )}
@@ -176,17 +179,15 @@ export function EventCard({ event }: { event: ApiSchemas["Event"] }) {
               : "border-border bg-muted text-muted-foreground",
           )}
         >
-          {cases.length > 0 && !isCasesError
-            ? `${occupiedTotal}/${totalLimit} мест`
-            : `${event.freeSpotsTotal} мест`}
+          {seatsLabel}
         </span>
         <span
           className={cn(
             "rounded-full border px-2.5 py-0.5 text-xs font-medium",
-            statusClass[event.status],
+            statusClass[cardStatus],
           )}
         >
-          {statusLabels[event.status]}
+          {statusLabels[cardStatus]}
         </span>
       </div>
 
@@ -195,12 +196,12 @@ export function EventCard({ event }: { event: ApiSchemas["Event"] }) {
           className="ring-violet-200 dark:ring-violet-500/40 size-2.5 shrink-0 rounded-full bg-violet-600 ring-4"
           aria-hidden
         />
-        <span className="text-violet-700 dark:text-violet-300 text-xs font-bold tracking-wide uppercase">
+        <span className="text-xs font-bold tracking-wide text-violet-700 uppercase dark:text-violet-300">
           {brand}
         </span>
       </div>
 
-      <h2 className="mt-3 text-base font-semibold leading-snug">{event.title}</h2>
+      <h2 className="mt-3 text-base leading-snug font-semibold">{event.title}</h2>
 
       {dates ? (
         <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-sm">
@@ -214,53 +215,43 @@ export function EventCard({ event }: { event: ApiSchemas["Event"] }) {
       </p>
 
       {tags.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {tags.map((tag) => (
-            <span key={tag} className={tagClass}>
-              {tag}
-            </span>
-          ))}
-        </div>
+        <KeywordTags keywords={event.keywords || tags.join(", ")} className="mt-3" />
       ) : null}
 
-      <EventCardCases
+      <EventCardTracks
         slug={event.slug}
-        cases={cases}
+        tracks={tracks}
         expanded={expanded}
-        isPending={isCasesPending}
-        isError={isCasesError}
+        isPending={isTracksPending}
+        isError={isTracksError}
       />
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {expanded && (
+        {expanded ? (
           <Button asChild variant="outline" size="sm">
             <Link to={pathTo(ROUTES.EVENT, { slug: event.slug })}>Подробнее</Link>
           </Button>
-        )}
-        {session?.role === "admin" ? (
+        ) : null}
+        {viewerRole === "admin" ? (
           <Button asChild size="sm" variant="secondary">
-            <Link to={pathTo(ROUTES.ADMIN_EVENT_EDIT, { eventId: event.id })}>
+            <Link to={pathTo(ROUTES.ADMIN_EVENT_EDIT, { eventId: String(event.id) })}>
               Редактировать
             </Link>
           </Button>
-        ) : event.registrationOpen ? (
-          isAuthenticated ? (
+        ) : showCabinet ? (
+          <Button asChild size="sm" variant="secondary">
+            <Link to={getCabinetHomeRoute(session?.role)}>Кабинет</Link>
+          </Button>
+        ) : isCaptain(viewerRole) ? (
+          event.registration_open && event.total_seats_available > 0 ? (
             <Button asChild size="sm">
-              <Link to={pathTo(ROUTES.EVENT_REGISTER, { slug: event.slug })}>
-                Регистрация
-              </Link>
+              <Link to={registerPath}>Регистрация</Link>
             </Button>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="cursor-not-allowed opacity-60"
-              onClick={handleRegisterClick}
-            >
-              Регистрация
-            </Button>
-          )
+          ) : null
+        ) : isGuest(viewerRole) && event.registration_open && event.total_seats_available > 0 ? (
+          <Button asChild size="sm">
+            <Link to={captainRegisterPath(registerPath)}>Регистрация</Link>
+          </Button>
         ) : null}
         <Button
           type="button"

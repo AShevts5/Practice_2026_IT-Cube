@@ -12,6 +12,7 @@ class Track(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    keywords: Mapped[str] = mapped_column(Text, default="", nullable=False)
     team_limit: Mapped[int] = mapped_column(Integer, nullable=False)
 
     event: Mapped["Event"] = relationship("Event", back_populates="tracks")

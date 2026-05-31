@@ -30,7 +30,7 @@ attachErrorHandler(publicFetchClient);
 
 fetchClient.use({
   async onRequest({ request }) {
-    const token = await useSession.getState().refreshToken();
+    const token = useSession.getState().getAccessToken();
 
     if (token) {
       request.headers.set("Authorization", `Bearer ${token}`);
@@ -39,8 +39,7 @@ fetchClient.use({
 
     return new Response(
       JSON.stringify({
-        code: "NOT_AUTHORIZED",
-        message: "You are not authorized to access this resource",
+        detail: "You are not authorized to access this resource",
       } satisfies ApiSchemas["Error"]),
       {
         status: 401,

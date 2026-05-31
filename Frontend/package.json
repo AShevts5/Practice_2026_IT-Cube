@@ -10,7 +10,8 @@
     "check": "npm run lint && npm run build",
     "dev:check": "npm run lint && npm run build && npm run dev",
     "preview": "vite preview",
-    "api": "npx openapi-typescript ./src/shared/api/schema/main.yaml -o ./src/shared/api/schema/generated.ts"
+    "api": "npx openapi-typescript ./src/shared/api/schema/main.yaml -o ./src/shared/api/schema/generated.ts",
+    "api:sync": "npm run api"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans": "^5.2.10",

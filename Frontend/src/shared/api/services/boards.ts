@@ -1,5 +1,4 @@
 import { fetchClient } from "../instance.ts";
-import type { ApiSchemas } from "../schema/index.ts";
 
 export type BoardsListQuery = {
   page?: number;
@@ -30,14 +29,14 @@ export const boardsService = {
     });
   },
 
-  async updateFavorite(boardId: string, body: ApiSchemas["UpdateBoardFavorite"]) {
+  async updateFavorite(boardId: string, body: { isFavorite: boolean }) {
     return fetchClient.PUT("/boards/{boardId}/favorite", {
       params: { path: { boardId } },
       body,
     });
   },
 
-  async renameBoard(boardId: string, body: ApiSchemas["RenameBoard"]) {
+  async renameBoard(boardId: string, body: { name: string }) {
     return fetchClient.PUT("/boards/{boardId}/rename", {
       params: { path: { boardId } },
       body,

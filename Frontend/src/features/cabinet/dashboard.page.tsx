@@ -8,14 +8,7 @@ import { Link } from "react-router-dom";
 import { UsersIcon, MailIcon, PhoneIcon, LayoutGridIcon } from "lucide-react";
 
 function CabinetDashboardPage() {
-  const { data: team, isPending, isError } = rqClient.useQuery(
-    "get",
-    "/cabinet/team",
-  );
-  const { data: casesData } = rqClient.useQuery(
-    "get",
-    "/cabinet/available-cases",
-  );
+  const { data: team, isPending, isError } = rqClient.useQuery("get", "/team/me");
 
   if (isPending) {
     return <Skeleton className="h-64 w-full rounded-2xl" />;
@@ -25,10 +18,8 @@ function CabinetDashboardPage() {
     return <p className="text-destructive">Не удалось загрузить данные команды</p>;
   }
 
-  const currentCase = casesData?.cases.find((c) => c.name === team.caseName);
-  const caseInfo = getCaseCatalogItem(currentCase?.id ?? "", team.caseName, {
-    description: currentCase?.description,
-    keywords: currentCase?.keywords,
+  const caseInfo = getCaseCatalogItem(String(team.track_id), team.track_title, {
+    description: team.track_title,
   });
 
   return (
@@ -45,18 +36,18 @@ function CabinetDashboardPage() {
           </p>
           <p className="mt-1 flex items-center gap-2 text-xl font-semibold">
             <UsersIcon className="size-5 text-primary" />
-            {team.name}
+            {team.team_name}
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-muted/40 p-4">
             <p className="text-muted-foreground text-xs uppercase">Капитан</p>
-            <p className="mt-2 font-medium">{team.captainName}</p>
+            <p className="mt-2 font-medium">{team.captain_full_name}</p>
           </div>
           <div className="rounded-2xl border border-border bg-muted/40 p-4">
             <p className="text-muted-foreground text-xs uppercase">Мероприятие</p>
-            <p className="mt-2 font-medium leading-snug">{team.eventTitle}</p>
+            <p className="mt-2 font-medium leading-snug">{team.event_title}</p>
           </div>
         </div>
 
@@ -79,21 +70,24 @@ function CabinetDashboardPage() {
           <p className="mt-2 font-medium leading-snug">{caseInfo.title}</p>
         </div>
 
-        {!team.canEdit && (
+        {!team.can_edit ? (
           <p className="text-muted-foreground text-sm">
-            Мероприятие завершено — редактирование недоступно.
+            Регистрация закрыта — редактирование и смена кейса недоступны.
           </p>
-        )}
-        {team.canEdit ? (
+        ) : team.can_manage ? (
           <div className="flex flex-wrap gap-2 pt-2">
             <Button asChild variant="outline">
               <Link to={ROUTES.CABINET_EDIT}>Редактировать</Link>
             </Button>
             <Button asChild>
-              <Link to={ROUTES.CABINET_CHANGE_CASE}>Выбор кейса</Link>
+              <Link to={ROUTES.CABINET_CHANGE_CASE}>Сменить кейс</Link>
             </Button>
           </div>
-        ) : null}
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Редактирование и смена кейса доступны только капитану.
+          </p>
+        )}
       </div>
     </div>
   );

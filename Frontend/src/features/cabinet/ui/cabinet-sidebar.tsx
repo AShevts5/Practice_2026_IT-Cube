@@ -1,7 +1,6 @@
 import { CABINET_NAV } from "../model/cabinet-nav.ts";
 import { cn } from "@/shared/lib/css";
 import { ROUTES } from "@/shared/model/routes";
-import { useSession } from "@/shared/model/session";
 import { sidebarNavLinkClass } from "@/shared/ui/layout/sidebar-nav.ts";
 import { NavLink } from "react-router-dom";
 import { rqClient } from "@/shared/api/instance";
@@ -16,13 +15,12 @@ function getInitials(name: string) {
 }
 
 export function CabinetSidebar() {
-  const { session } = useSession();
-  const { data: team } = rqClient.useQuery("get", "/cabinet/team");
+  const { data: team } = rqClient.useQuery("get", "/team/me");
 
-  const navItems = CABINET_NAV;
-  const displayName = team?.captainName ?? session?.email ?? "Капитан";
-  const email = team?.email ?? session?.email ?? "";
-  const eventTitle = team?.eventTitle ?? "Мероприятие";
+  const displayName = team?.captain_full_name ?? "Капитан";
+  const email = team?.email ?? "";
+  const eventTitle = team?.event_title ?? "Мероприятие";
+  const canManage = team?.can_manage ?? false;
 
   return (
     <aside className="w-56 shrink-0">
@@ -36,15 +34,30 @@ export function CabinetSidebar() {
       </div>
 
       <nav className="flex flex-col gap-1">
-        {navItems.map((item) => {
+        {CABINET_NAV.map((item) => {
           const Icon = item.icon;
           const isCases = item.to === ROUTES.CABINET_CHANGE_CASE;
+          const requiresManage = item.requiresManage ?? false;
+          const blocked = requiresManage && !canManage;
 
           if (item.disabled || !item.to) {
             return (
               <span
                 key={item.label}
                 className="text-muted-foreground flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm opacity-45"
+              >
+                <Icon className="size-4 shrink-0" />
+                {item.label}
+              </span>
+            );
+          }
+
+          if (blocked) {
+            return (
+              <span
+                key={item.to}
+                className="text-muted-foreground flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm opacity-45"
+                title="Доступно только капитану при открытой регистрации"
               >
                 <Icon className="size-4 shrink-0" />
                 {item.label}
@@ -64,7 +77,7 @@ export function CabinetSidebar() {
               <span className="flex-1">{item.label}</span>
               {isCases && team ? (
                 <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                  7
+                  {team.track_title.slice(0, 1)}
                 </span>
               ) : null}
             </NavLink>

@@ -1,18 +1,17 @@
 import { redirect } from "react-router-dom";
+import { fetchCaptainProfile } from "@/features/auth/model/fetch-captain-profile";
 import { getCabinetHomeRoute, ROUTES } from "@/shared/model/routes";
 import { useSession } from "@/shared/model/session";
 
 async function ensureAuth() {
-  const token = await useSession.getState().refreshToken();
+  const token = useSession.getState().getAccessToken();
 
   if (!token) {
     useSession.getState().logout();
     return redirect(ROUTES.LOGIN);
   }
 
-  const { session } = useSession.getState();
-
-  if (!session?.twoFaVerified) {
+  if (useSession.getState().otpChallenge) {
     return redirect(ROUTES.VERIFY_2FA);
   }
 
@@ -31,8 +30,15 @@ export async function cabinetLoader() {
   if (session?.role === "admin") {
     return redirect(ROUTES.ADMIN);
   }
-  if (session?.role !== "team") {
+  if (session?.role !== "team" && session?.role !== "captain") {
     return redirect(ROUTES.HOME);
+  }
+
+  if (session?.role === "captain") {
+    const profile = await fetchCaptainProfile();
+    if (!profile?.has_team) {
+      return redirect(ROUTES.HOME);
+    }
   }
 
   return null;
@@ -43,8 +49,8 @@ export async function captainOnlyLoader() {
   if (result) return result;
 
   const { session } = useSession.getState();
-  if (session?.role !== "team") {
-    return redirect(getCabinetHomeRoute(session?.role));
+  if (session?.role !== "captain") {
+    return redirect(ROUTES.CABINET_DASHBOARD);
   }
 
   return null;

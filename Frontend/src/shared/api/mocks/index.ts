@@ -3,6 +3,7 @@ export async function enableMocking() {
     return;
   }
 
-  const { worker } = await import("./browser.ts");
-  return worker.start({ onUnhandledRequest: "bypass" });
+  console.warn(
+    "MSW mocks отключены: фронт использует контракт Backend API. Установите VITE_USE_MOCKS=false.",
+  );
 }

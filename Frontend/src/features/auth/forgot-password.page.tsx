@@ -22,24 +22,13 @@ const schema = z.object({
 
 function ForgotPasswordForm() {
   const form = useForm({ resolver: zodResolver(schema) });
-  const { submit, isPending, isSuccess, errorMessage } = useForgotPassword();
-
-  if (isSuccess) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        Проверьте почту. Для демо сброса используйте ссылку{" "}
-        <Link className="text-primary underline" to="/reset-password/reset-1">
-          /reset-password/reset-1
-        </Link>
-      </p>
-    );
-  }
+  const { submit, isPending, errorMessage } = useForgotPassword();
 
   return (
     <Form {...form}>
       <form
         className="flex flex-col gap-4"
-        onSubmit={form.handleSubmit(submit)}
+        onSubmit={form.handleSubmit(({ email }) => submit(email))}
       >
         <FormField
           control={form.control}

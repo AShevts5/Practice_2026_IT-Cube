@@ -91,6 +91,12 @@ export function pathTo(route: string, params: Record<string, string> = {}) {
 }
 
 export function getCabinetHomeRoute(role?: UserRole) {
-  if (role === "team") return ROUTES.CABINET_DASHBOARD;
+  if (role === "team" || role === "captain") return ROUTES.CABINET_DASHBOARD;
+  if (role === "admin") return ROUTES.ADMIN;
   return ROUTES.HOME;
+}
+
+export function buildAuthRedirectPath(next?: string | null) {
+  if (!next || !next.startsWith("/")) return ROUTES.HOME;
+  return next;
 }

@@ -2,37 +2,22 @@ import { publicFetchClient } from "../instance.ts";
 import type { ApiSchemas } from "../schema/index.ts";
 
 export const eventsService = {
-  async listEvents(status?: ApiSchemas["Event"]["status"]) {
-    return publicFetchClient.GET("/events", {
-      params: { query: status ? { status } : undefined },
-    });
+  async listEvents() {
+    return publicFetchClient.GET("/public/events");
   },
 
   async getEvent(slug: string) {
-    return publicFetchClient.GET("/events/{slug}", {
+    return publicFetchClient.GET("/public/events/{slug}", {
       params: { path: { slug } },
     });
   },
 
-  async getCases(slug: string, available?: boolean) {
-    return publicFetchClient.GET("/events/{slug}/cases", {
-      params: {
-        path: { slug },
-        query: available !== undefined ? { available } : undefined,
-      },
-    });
-  },
-
-  async verifyInvite(slug: string, body: ApiSchemas["VerifyInviteRequest"]) {
-    return publicFetchClient.POST("/events/{slug}/verify-invite-code", {
-      params: { path: { slug } },
-      body,
-    });
-  },
-
-  async registerTeam(slug: string, body: ApiSchemas["RegisterTeamRequest"]) {
-    return publicFetchClient.POST("/events/{slug}/register", {
-      params: { path: { slug } },
+  async registerTeam(
+    eventSlug: string,
+    body: ApiSchemas["RegistrationRequest"],
+  ) {
+    return publicFetchClient.POST("/registration/events/{event_slug}/teams", {
+      params: { path: { event_slug: eventSlug } },
       body,
     });
   },

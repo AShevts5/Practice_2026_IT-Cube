@@ -1,11 +1,10 @@
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.db.models.enums import EventStatus
 from app.db.models.event import Event
-from app.db.models.team import Team
 from app.db.models.track import Track
 from app.schemas.event import (
     EventAdminSchema,
@@ -13,6 +12,7 @@ from app.schemas.event import (
     EventCreateSchema,
     EventDetailSchema,
     EventUpdateSchema,
+    TrackUpsertSchema,
 )
 from app.services.helpers import (
     PUBLIC_EVENT_STATUSES,
@@ -26,24 +26,35 @@ class EventService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def _total_seats_available(self, event: Event) -> int:
-        total = 0
+    async def _seat_totals(self, event: Event) -> tuple[int, int, int]:
+        available = 0
+        registered = 0
+        limit = 0
         event_open = is_registration_open(event.status)
         for track in event.tracks:
             occupied = await count_teams_on_track(self.db, track.id)
+            limit += track.team_limit
+            registered += occupied
             if event_open:
-                total += max(track.team_limit - occupied, 0)
-        return total
+                available += max(track.team_limit - occupied, 0)
+        return available, registered, limit
 
     async def _to_card(self, event: Event) -> EventCardSchema:
+        available, registered, limit = await self._seat_totals(event)
         return EventCardSchema(
             id=event.id,
             title=event.title,
             slug=event.slug,
             description=event.description,
+            keywords=event.keywords,
+            brand=event.brand,
+            starts_at=event.starts_at,
+            ends_at=event.ends_at,
             status=event.status,
             registration_open=is_registration_open(event.status),
-            total_seats_available=await self._total_seats_available(event),
+            total_seats_available=available,
+            total_seats_limit=limit,
+            total_teams_registered=registered,
         )
 
     async def _to_admin_schema(self, event: Event) -> EventAdminSchema:
@@ -54,6 +65,10 @@ class EventService:
             title=event.title,
             slug=event.slug,
             description=event.description,
+            keywords=event.keywords,
+            brand=event.brand,
+            starts_at=event.starts_at,
+            ends_at=event.ends_at,
             status=event.status,
             tracks=tracks,
         )
@@ -108,6 +123,10 @@ class EventService:
             title=data.title,
             slug=data.slug,
             description=data.description,
+            keywords=data.keywords,
+            brand=data.brand,
+            starts_at=data.starts_at,
+            ends_at=data.ends_at,
             status=EventStatus.DRAFT,
         )
         self.db.add(event)
@@ -120,11 +139,86 @@ class EventService:
                     title=track_data.title,
                     slug=track_data.slug,
                     description=track_data.description,
+                    keywords=track_data.keywords,
                     team_limit=track_data.team_limit,
                 )
             )
         await self.db.flush()
         return await self._to_admin_schema(await self._get_event_or_404(event.id))
+
+    async def _sync_event_tracks(
+        self,
+        event: Event,
+        tracks_data: list[TrackUpsertSchema],
+    ) -> None:
+        if not tracks_data:
+            raise ValidationError("Добавьте хотя бы один кейс")
+
+        existing = {track.id: track for track in event.tracks}
+        kept_ids: set[int] = set()
+
+        for track_data in tracks_data:
+            slug = track_data.slug.strip()
+            title = track_data.title.strip()
+            if not title or not slug:
+                raise ValidationError("У каждого кейса должны быть название и slug")
+
+            if track_data.id is not None:
+                track = existing.get(track_data.id)
+                if track is None:
+                    raise ValidationError(f"Кейс с id={track_data.id} не найден")
+
+                occupied = await count_teams_on_track(self.db, track.id)
+                if track_data.team_limit < occupied:
+                    raise ValidationError(
+                        f"Лимит кейса «{track.title}» не может быть меньше числа команд ({occupied})"
+                    )
+
+                dup = await self.db.execute(
+                    select(Track).where(
+                        Track.event_id == event.id,
+                        Track.slug == slug,
+                        Track.id != track.id,
+                    )
+                )
+                if dup.scalar_one_or_none():
+                    raise ValidationError(f"Кейс со slug «{slug}» уже существует")
+
+                track.title = title
+                track.slug = slug
+                track.description = track_data.description
+                track.keywords = track_data.keywords
+                track.team_limit = track_data.team_limit
+                kept_ids.add(track.id)
+                continue
+
+            dup = await self.db.execute(
+                select(Track).where(Track.event_id == event.id, Track.slug == slug)
+            )
+            if dup.scalar_one_or_none():
+                raise ValidationError(f"Кейс со slug «{slug}» уже существует")
+
+            new_track = Track(
+                event_id=event.id,
+                title=title,
+                slug=slug,
+                description=track_data.description,
+                keywords=track_data.keywords,
+                team_limit=track_data.team_limit,
+            )
+            self.db.add(new_track)
+            await self.db.flush()
+            kept_ids.add(new_track.id)
+
+        for track_id, track in existing.items():
+            if track_id in kept_ids:
+                continue
+            occupied = await count_teams_on_track(self.db, track_id)
+            if occupied > 0:
+                raise ValidationError(
+                    f"Нельзя удалить кейс «{track.title}»: есть зарегистрированные команды"
+                )
+            await self.db.delete(track)
 
     async def update_event(self, event_id: int, data: EventUpdateSchema) -> EventAdminSchema:
         event = await self._get_event_or_404(event_id)
@@ -142,28 +236,19 @@ class EventService:
             event.slug = data.slug
         if data.description is not None:
             event.description = data.description
+        if data.keywords is not None:
+            event.keywords = data.keywords
+        if data.brand is not None:
+            event.brand = data.brand
+        if data.starts_at is not None:
+            event.starts_at = data.starts_at
+        if data.ends_at is not None:
+            event.ends_at = data.ends_at
         if data.status is not None:
             event.status = data.status
 
         if data.tracks is not None:
-            teams_count = await self.db.execute(
-                select(func.count()).select_from(Team).where(Team.event_id == event.id)
-            )
-            if int(teams_count.scalar_one()) > 0:
-                raise ValidationError("Нельзя заменить кейсы: уже есть зарегистрированные команды")
-            for track in list(event.tracks):
-                await self.db.delete(track)
-            await self.db.flush()
-            for track_data in data.tracks:
-                self.db.add(
-                    Track(
-                        event_id=event.id,
-                        title=track_data.title,
-                        slug=track_data.slug,
-                        description=track_data.description,
-                        team_limit=track_data.team_limit,
-                    )
-                )
+            await self._sync_event_tracks(event, data.tracks)
 
         await self.db.flush()
         return await self._to_admin_schema(await self._get_event_or_404(event_id))

@@ -5,7 +5,7 @@ import { AuthLayout } from "./ui/auth-layout";
 import { Verify2faForm } from "./ui/verify-2fa-form";
 
 function Verify2faPage() {
-  const { tempToken, isAuthenticated, session } = useSession();
+  const { otpChallenge, isAuthenticated, session } = useSession();
 
   if (isAuthenticated) {
     return (
@@ -20,13 +20,13 @@ function Verify2faPage() {
     );
   }
 
-  if (!tempToken) {
+  if (!otpChallenge) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return (
     <AuthLayout
-      title="Подтверждение по email"
+      title="Подтверждение входа"
       form={<Verify2faForm />}
     />
   );

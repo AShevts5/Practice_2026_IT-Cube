@@ -4,278 +4,14 @@
  */
 
 export interface paths {
-    "/auth/login": {
+    "/public/events": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Login user */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["LoginRequest"];
-                };
-            };
-            responses: {
-                /** @description Login step 1 — temp token for 2FA */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Login2FAResponse"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/verify-2fa": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify 2FA OTP */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["Verify2FARequest"];
-                };
-            };
-            responses: {
-                /** @description Access token issued */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AuthResponse"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/forgot-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request password reset */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ForgotPasswordRequest"];
-                };
-            };
-            responses: {
-                /** @description Email sent if user exists */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/reset-password/{token}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reset password by token */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    token: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ResetPasswordRequest"];
-                };
-            };
-            responses: {
-                /** @description Password updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                400: components["responses"]["BadRequestError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Register new user */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RegisterRequest"];
-                };
-            };
-            responses: {
-                /** @description Registration — proceed to 2FA */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Login2FAResponse"];
-                    };
-                };
-                400: components["responses"]["BadRequestError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh access token */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: {
-                    refreshToken?: string;
-                };
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Access token refreshed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AuthResponse"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List events */
-        get: {
-            parameters: {
-                query?: {
-                    status?: "active" | "completed" | "draft";
-                    publicOnly?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Events list */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["EventList"];
-                    };
-                };
-            };
-        };
+        get: operations["listPublicEvents"];
         put?: never;
         post?: never;
         delete?: never;
@@ -284,37 +20,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/{slug}": {
+    "/public/events/{slug}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get event by slug */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    slug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Event */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Event"];
-                    };
-                };
-                404: components["responses"]["NotFoundError"];
-            };
-        };
+        get: operations["getPublicEvent"];
         put?: never;
         post?: never;
         delete?: never;
@@ -323,48 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/{slug}/cases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get available cases for event */
-        get: {
-            parameters: {
-                query?: {
-                    available?: boolean;
-                };
-                header?: never;
-                path: {
-                    slug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Cases */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CaseList"];
-                    };
-                };
-                404: components["responses"]["NotFoundError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/events/{slug}/verify-invite-code": {
+    "/registration/events/{event_slug}/teams": {
         parameters: {
             query?: never;
             header?: never;
@@ -373,41 +45,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify invite code */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    slug: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["VerifyInviteRequest"];
-                };
-            };
-            responses: {
-                /** @description Verification result */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["VerifyInviteResponse"];
-                    };
-                };
-                400: components["responses"]["BadRequestError"];
-            };
-        };
+        post: operations["registerTeam"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/events/{slug}/register": {
+    "/auth/captain/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -416,184 +61,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Register team for event */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    slug: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RegisterTeamRequest"];
-                };
-            };
-            responses: {
-                /** @description Registered */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RegisterTeamResponse"];
-                    };
-                };
-                400: components["responses"]["BadRequestError"];
-                404: components["responses"]["NotFoundError"];
-                409: components["responses"]["BadRequestError"];
-                410: components["responses"]["BadRequestError"];
-            };
-        };
+        post: operations["captainRegister"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/cabinet/team": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get team (captain) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Team data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Team"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        /** Update team (captain only) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateTeamRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated team */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Team"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                409: components["responses"]["BadRequestError"];
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cabinet/available-cases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Available cases for change */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Cases */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CaseList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cabinet/available-events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Available events for switch */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Events */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CabinetEventList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cabinet/change-case": {
+    "/auth/captain/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -602,41 +77,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Change team case (captain only) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ChangeCaseRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated team */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Team"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                409: components["responses"]["BadRequestError"];
-            };
-        };
+        post: operations["captainLogin"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/cabinet/change-event": {
+    "/auth/captain/otp/send": {
         parameters: {
             query?: never;
             header?: never;
@@ -645,70 +93,37 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Change team event (captain only) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ChangeEventRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated team */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Team"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                409: components["responses"]["BadRequestError"];
-            };
-        };
+        post: operations["captainOtpSend"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/cabinet/history": {
+    "/auth/captain/otp/verify": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Team action history */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description History */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["HistoryList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
+        get?: never;
+        put?: never;
+        post: operations["captainOtpVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/captain/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        get: operations["getCaptainProfile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -717,42 +132,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/stats": {
+    "/auth/team/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Admin dashboard stats */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Stats */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminStats"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-            };
+        get?: never;
+        put?: never;
+        post: operations["teamLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/team/otp/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        get?: never;
+        put?: never;
+        post: operations["teamOtpSend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/team/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["teamOtpVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/otp/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminOtpSend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminOtpVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/team/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeamCabinet"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["updateTeamCabinet"];
         trace?: never;
     };
     "/admin/events": {
@@ -762,375 +251,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List events for admin */
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    status?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Events */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminEventList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
+        get: operations["listAdminEvents"];
         put?: never;
-        /** Create event */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateEventRequest"];
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminEvent"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
+        post: operations["createAdminEvent"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/admin/events/{eventId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update event */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateEventRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminEvent"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        post?: never;
-        /** Delete event */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                400: components["responses"]["BadRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/events/{eventId}/cases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List cases for event (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Cases with stats */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CaseStatsList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        put?: never;
-        /** Add case to event */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateCaseRequest"];
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminCase"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/events/{eventId}/cases/{caseId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update case */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                    caseId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateCaseRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminCase"];
-                    };
-                };
-                400: components["responses"]["BadRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        post?: never;
-        /** Delete case */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                    caseId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                400: components["responses"]["BadRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/events/{eventId}/invite-codes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List invite codes */
-        get: {
-            parameters: {
-                query?: {
-                    status?: "active" | "used" | "expired";
-                };
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Codes */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InviteCodeList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        put?: never;
-        /** Add invite code manually */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateInviteCodeRequest"];
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InviteCode"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/events/{eventId}/invite-codes/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Generate invite codes */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["GenerateInviteCodesRequest"];
-                };
-            };
-            responses: {
-                /** @description Generated */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InviteCodeList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/events/{eventId}/invite-codes/{codeId}": {
+    "/admin/events/{event_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1140,69 +270,68 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke invite code */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                    codeId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                400: components["responses"]["BadRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
+        delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["updateAdminEvent"];
         trace?: never;
     };
-    "/admin/events/{eventId}/teams": {
+    "/admin/events/{event_id}/finish": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List teams for event */
-        get: {
-            parameters: {
-                query?: {
-                    search?: string;
-                    caseName?: string;
-                };
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Teams */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AdminTeamList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
+        get?: never;
+        put?: never;
+        post: operations["finishAdminEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invites/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        get: operations["listEventInvites"];
+        put?: never;
+        post: operations["createEventInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invites/events/{event_id}/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generateEventInvites"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/teams/events/{event_id}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEventTeams"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1211,36 +340,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/events/{eventId}/teams/export": {
+    "/admin/teams/events/{event_id}/stats": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Export teams CSV */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    eventId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description CSV file */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/csv": string;
-                    };
-                };
-            };
+        get: operations["listEventTrackStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/export/events/{event_id}/registrations.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        get: operations["exportEventRegistrations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1256,57 +379,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get all boards for current user */
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    limit?: number;
-                    sort?: "createdAt" | "updatedAt" | "lastOpenedAt" | "name";
-                    isFavorite?: boolean;
-                    search?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of boards */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BoardsList"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
+        get: operations["listBoards"];
         put?: never;
-        /** Create a new board */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Board created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Board"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
+        post: operations["createBoard"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1320,56 +395,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a board by id */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Board */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Board"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
-            };
-        };
+        get: operations["getBoard"];
         put?: never;
         post?: never;
-        /** Delete a board */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Board deleted successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
-            };
-        };
+        delete: operations["deleteBoard"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1383,35 +412,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update a board favorite */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateBoardFavorite"];
-                };
-            };
-            responses: {
-                /** @description Board updated successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Board"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
-            };
-        };
+        put: operations["updateBoardFavorite"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1427,35 +428,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Rename a board */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RenameBoard"];
-                };
-            };
-            responses: {
-                /** @description Board renamed successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Board"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
-            };
-        };
+        put: operations["renameBoard"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1467,310 +440,975 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        LoginRequest: {
-            /** Format: email */
-            email: string;
-            /** Format: password */
-            password: string;
-        };
-        Login2FAResponse: {
-            tempToken: string;
-            requires2fa: boolean;
-        };
         Error: {
+            detail?: string | Record<string, never>[];
+        };
+        LoginRequest: {
+            login: string;
+            password: string;
+        };
+        CaptainRegisterRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            full_name: string;
+            phone: string;
+        };
+        CaptainProfile: {
+            id: number;
+            /** Format: email */
+            email: string;
+            full_name: string;
+            phone: string;
+            has_team: boolean;
+            team_id?: number | null;
+        };
+        OtpChallengeResponse: {
+            challenge_id: number;
+            channel: string;
             message: string;
+        };
+        OtpRequest: {
+            challenge_id: number;
+            /**
+             * @default email
+             * @enum {string}
+             */
+            channel: "email" | "sms";
+        };
+        OtpVerifyRequest: {
+            challenge_id: number;
             code: string;
         };
-        Verify2FARequest: {
-            code: string;
-            tempToken: string;
+        TokenResponse: {
+            access_token: string;
+            token_type: string;
         };
-        User: {
-            id: string;
-            /** Format: email */
-            email: string;
-            /** @enum {string} */
-            role: "team" | "admin";
-        };
-        AuthResponse: {
-            accessToken: string;
-            user: components["schemas"]["User"];
-        };
-        ForgotPasswordRequest: {
-            /** Format: email */
-            email: string;
-        };
-        ResetPasswordRequest: {
-            password: string;
-        };
-        RegisterRequest: {
-            /** Format: email */
-            email: string;
-            /** Format: password */
-            password: string;
-        };
-        Event: {
-            id: string;
+        /** @enum {string} */
+        EventStatus: "draft" | "published" | "registration_open" | "registration_closed" | "finished";
+        EventCard: {
+            id: number;
             title: string;
             slug: string;
             description: string;
-            /** @enum {string} */
-            status: "active" | "completed" | "draft";
-            freeSpotsTotal: number;
-            registrationOpen?: boolean;
+            /** @description Ключевые слова через запятую */
+            keywords: string;
+            brand: string;
             /** Format: date-time */
-            startsAt?: string;
+            starts_at?: string | null;
             /** Format: date-time */
-            endsAt?: string;
-            /** @description Ключевые слова через запятую (теги на карточке) */
-            keywords?: string;
+            ends_at?: string | null;
+            status: components["schemas"]["EventStatus"];
+            registration_open: boolean;
+            total_seats_available: number;
+            total_seats_limit: number;
+            total_teams_registered: number;
         };
-        EventList: {
-            events: components["schemas"]["Event"][];
+        TrackPublic: {
+            id: number;
+            title: string;
+            slug: string;
+            description: string;
+            keywords: string;
+            team_limit: number;
+            teams_registered: number;
+            seats_available: number;
+            registration_status: string;
         };
-        Case: {
-            id: string;
-            name: string;
-            limit: number;
-            occupied: number;
-            free: number;
-            description?: string;
-            /** @description Ключевые слова через запятую (стек технологий) */
-            keywords?: string;
+        EventDetail: components["schemas"]["EventCard"] & {
+            tracks: components["schemas"]["TrackPublic"][];
         };
-        CaseList: {
-            cases: components["schemas"]["Case"][];
+        RegistrationRequest: {
+            track_id: number;
+            team_name: string;
+            invite_code: string;
         };
-        VerifyInviteRequest: {
-            code: string;
+        RegistrationResponse: {
+            team_id: number;
+            login: string;
+            password: string;
+            message: string;
         };
-        VerifyInviteResponse: {
-            valid: boolean;
+        TeamCabinet: {
+            id: number;
+            team_name: string;
+            captain_full_name: string;
+            email: string;
+            phone: string;
+            event_title: string;
+            event_slug: string;
+            track_title: string;
+            track_id: number;
+            /** @description Регистрация открыта — период, когда допускаются изменения */
+            can_edit: boolean;
+            /** @description Капитан может редактировать данные и менять кейс */
+            can_manage: boolean;
         };
-        RegisterTeamRequest: {
-            caseId: string;
-            inviteCode: string;
-            name: string;
-            captainName: string;
+        TeamUpdate: {
+            team_name?: string;
+            captain_full_name?: string;
             /** Format: email */
-            email: string;
-            phone: string;
-        };
-        RegisterTeamResponse: {
-            success: boolean;
-            emailSent: boolean;
-            credentials: {
-                login: string;
-                password: string;
-            };
-        };
-        Team: {
-            id: string;
-            name: string;
-            captainName: string;
-            email: string;
-            phone: string;
-            eventId: string;
-            caseName: string;
-            eventTitle: string;
-            /** Format: date-time */
-            registeredAt: string;
-            /** @enum {string} */
-            applicationStatus: "pending" | "confirmed";
-            canEdit: boolean;
-        };
-        UpdateTeamRequest: {
-            name?: string;
-            captainName?: string;
             email?: string;
             phone?: string;
+            track_id?: number;
         };
-        ChangeCaseRequest: {
-            caseId: string;
-        };
-        CabinetEvent: {
-            id: string;
+        TrackCreate: {
             title: string;
-            /** @enum {string} */
-            status: "active" | "completed" | "draft";
-            registrationOpen: boolean;
+            slug: string;
+            description?: string;
+            /** @description Ключевые слова через запятую */
+            keywords?: string;
+            team_limit: number;
         };
-        CabinetEventList: {
-            events: components["schemas"]["CabinetEvent"][];
-        };
-        ChangeEventRequest: {
-            eventId: string;
-        };
-        HistoryEntry: {
-            id: string;
-            action: string;
-            /** Format: date-time */
-            createdAt: string;
-            details?: string;
-        };
-        HistoryList: {
-            entries: components["schemas"]["HistoryEntry"][];
-        };
-        AdminStats: {
-            eventsCount: number;
-            teamsCount: number;
-            freeSpotsTotal: number;
-        };
-        AdminEvent: components["schemas"]["Event"] & {
-            teamsCount?: number;
-        };
-        AdminEventList: {
-            events: components["schemas"]["AdminEvent"][];
-            total: number;
-            totalPages: number;
-        };
-        CreateEventRequest: {
+        TrackUpsert: {
+            /** @description ID существующего кейса; без id — создать новый */
+            id?: number;
             title: string;
-            /** @description Генерируется автоматически из названия, если не передан */
-            slug?: string;
-            keywords: string;
-            description: string;
-            /** @enum {string} */
-            status: "active" | "completed" | "draft";
-            registrationOpen?: boolean;
-            /** Format: date-time */
-            startsAt: string;
-            /** Format: date-time */
-            endsAt: string;
+            slug: string;
+            description?: string;
+            /** @description Ключевые слова через запятую */
+            keywords?: string;
+            team_limit: number;
         };
-        UpdateEventRequest: {
+        EventCreate: {
+            title: string;
+            slug: string;
+            description?: string;
+            keywords?: string;
+            brand?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            tracks?: components["schemas"]["TrackCreate"][];
+        };
+        EventUpdate: {
             title?: string;
             slug?: string;
-            keywords?: string;
             description?: string;
-            /** @enum {string} */
-            status?: "active" | "completed" | "draft";
-            registrationOpen?: boolean;
+            keywords?: string;
+            brand?: string;
             /** Format: date-time */
-            startsAt?: string;
+            starts_at?: string | null;
             /** Format: date-time */
-            endsAt?: string;
+            ends_at?: string | null;
+            status?: components["schemas"]["EventStatus"];
+            tracks?: components["schemas"]["TrackUpsert"][];
         };
-        AdminCase: components["schemas"]["Case"] & {
-            fillPercent?: number;
-        };
-        CaseStatsList: {
-            cases: components["schemas"]["AdminCase"][];
-        };
-        CreateCaseRequest: {
-            name: string;
-            keywords: string;
+        EventAdmin: {
+            id: number;
+            title: string;
+            slug: string;
             description: string;
-            limit: number;
-        };
-        UpdateCaseRequest: {
-            name?: string;
-            keywords?: string;
-            description?: string;
-            limit?: number;
-        };
-        InviteCode: {
-            id: string;
-            code: string;
-            /** @enum {string} */
-            status: "active" | "used" | "expired";
+            keywords: string;
+            brand: string;
             /** Format: date-time */
-            expiresAt: string;
+            starts_at?: string | null;
             /** Format: date-time */
-            usedAt?: string;
+            ends_at?: string | null;
+            status: components["schemas"]["EventStatus"];
+            tracks: components["schemas"]["TrackPublic"][];
         };
-        InviteCodeList: {
-            codes: components["schemas"]["InviteCode"][];
-        };
-        CreateInviteCodeRequest: {
-            code: string;
-            /** Format: date-time */
-            expiresAt: string;
-        };
-        GenerateInviteCodesRequest: {
-            count: number;
-            /** Format: date-time */
-            expiresAt: string;
-        };
-        AdminTeam: {
-            id: string;
+        TeamAdmin: {
+            id: number;
             name: string;
-            captainName: string;
+            captain_full_name: string;
             email: string;
             phone: string;
-            caseName: string;
-            /** Format: date-time */
-            registeredAt: string;
-            applicationStatus: string;
+            track_title: string;
+            created_at: string;
         };
-        AdminTeamList: {
-            teams: components["schemas"]["AdminTeam"][];
+        TrackStats: {
+            track_id: number;
+            track_title: string;
+            limit: number;
+            occupied: number;
+            available: number;
+            status: string;
+        };
+        InviteCode: {
+            id: number;
+            label: string | null;
+            is_used: boolean;
+            used_at: string | null;
+            created_at: string;
+        };
+        InviteCodeGenerated: components["schemas"]["InviteCode"] & {
+            code: string;
+        };
+        InviteGenerate: {
+            count: number;
+            label_prefix?: string | null;
+        };
+        InviteCodeCreate: {
+            code: string;
+            label?: string | null;
         };
         Board: {
             id: string;
             name: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            lastOpenedAt: string;
             isFavorite: boolean;
+            lastOpenedAt: string;
+            createdAt: string;
         };
-        BoardsList: {
+        BoardListResponse: {
             list: components["schemas"]["Board"][];
-            total: number;
             totalPages: number;
         };
-        UpdateBoardFavorite: {
-            isFavorite: boolean;
-        };
-        RenameBoard: {
-            name: string;
-        };
     };
-    responses: {
-        /** @description Unauthorized */
-        UnauthorizedError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Bad request */
-        BadRequestError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Resource not found */
-        NotFoundError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Forbidden */
-        ForbiddenError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-    };
+    responses: never;
     parameters: never;
     requestBodies: never;
     headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    listPublicEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCard"][];
+                };
+            };
+        };
+    };
+    getPublicEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+        };
+    };
+    registerTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationResponse"];
+                };
+            };
+        };
+    };
+    captainRegister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptainRegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    captainLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    captainOtpSend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    captainOtpVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    getCaptainProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptainProfile"];
+                };
+            };
+        };
+    };
+    teamLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    teamOtpSend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    teamOtpVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    adminLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    adminOtpSend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                };
+            };
+        };
+    };
+    adminOtpVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    getTeamCabinet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamCabinet"];
+                };
+            };
+        };
+    };
+    updateTeamCabinet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamCabinet"];
+                };
+            };
+        };
+    };
+    listAdminEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAdmin"][];
+                };
+            };
+        };
+    };
+    createAdminEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAdmin"];
+                };
+            };
+        };
+    };
+    updateAdminEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAdmin"];
+                };
+            };
+        };
+    };
+    finishAdminEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAdmin"];
+                };
+            };
+        };
+    };
+    listEventInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCode"][];
+                };
+            };
+        };
+    };
+    createEventInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCodeGenerated"];
+                };
+            };
+        };
+    };
+    generateEventInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteGenerate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCodeGenerated"][];
+                };
+            };
+        };
+    };
+    listEventTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamAdmin"][];
+                };
+            };
+        };
+    };
+    listEventTrackStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackStats"][];
+                };
+            };
+        };
+    };
+    exportEventRegistrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    listBoards: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                sort?: string;
+                favorites?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mock boards list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardListResponse"];
+                };
+            };
+        };
+    };
+    createBoard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created board */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+    getBoard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                boardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Board */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+    deleteBoard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                boardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateBoardFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                boardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    isFavorite: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+    renameBoard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                boardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Renamed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+}

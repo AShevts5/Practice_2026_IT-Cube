@@ -12,6 +12,8 @@ class TeamCabinetSchema(BaseModel):
     event_slug: str
     track_title: str
     track_id: int
+    can_edit: bool
+    can_manage: bool
 
     model_config = {"from_attributes": True}
 

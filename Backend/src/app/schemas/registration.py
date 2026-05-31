@@ -1,13 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
-
-from app.core.validators import PhoneNumber
+from pydantic import BaseModel, Field
 
 class RegistrationRequest(BaseModel):
     track_id: int
     team_name: str = Field(..., min_length=2, max_length=255)
-    captain_full_name: str = Field(..., min_length=3, max_length=255)
-    email: EmailStr
-    phone: PhoneNumber
     invite_code: str = Field(..., min_length=4, max_length=32)
 
 

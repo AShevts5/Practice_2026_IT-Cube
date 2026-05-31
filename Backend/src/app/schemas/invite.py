@@ -4,7 +4,7 @@ class InviteCodeSchema(BaseModel):
     id: int
     label: str | None
     is_used: bool
-    used_at: str | None
+    used_at: str | None = None
     created_at: str
 
 

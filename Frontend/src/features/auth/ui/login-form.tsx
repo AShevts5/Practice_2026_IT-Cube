@@ -17,10 +17,9 @@ import { useLogin } from "../model/use-login";
 import { SocialLoginStubs } from "./social-login-stubs";
 
 const loginSchema = z.object({
-  email: z
+  login: z
     .string()
-    .min(1, "Email обязателен")
-    .email("Неверный email"),
+    .min(1, "Логин обязателен"),
   password: z
     .string()
     .min(1, "Пароль обязателен")
@@ -42,12 +41,12 @@ export function LoginForm() {
         <SocialLoginStubs />
         <FormField
           control={form.control}
-          name="email"
+          name="login"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Логин или email</FormLabel>
               <FormControl>
-                <Input placeholder="admin@gmail.com" {...field} />
+                <Input placeholder="team_xxxx или admin@itcube.local" {...field} />
               </FormControl>
 
               <FormMessage />

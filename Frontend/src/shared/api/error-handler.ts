@@ -3,7 +3,12 @@ import { getErrorMessage, parseApiError } from "@/shared/lib/errors.ts";
 import { ROUTES } from "@/shared/model/routes";
 import { useSession } from "@/shared/model/session";
 
-const AUTH_PATHS = ["/auth/login", "/auth/register", "/auth/refresh"];
+const AUTH_PATHS = [
+  "/auth/team/login",
+  "/auth/admin/login",
+  "/auth/team/otp/verify",
+  "/auth/admin/otp/verify",
+];
 
 function isAuthRequest(request: Request): boolean {
   const path = new URL(request.url).pathname;
@@ -18,7 +23,7 @@ export async function handleApiErrorResponse(
     return;
   }
 
-  const body = await parseApiError(response);
+  const body = await parseApiError(response.clone());
   const message = getErrorMessage(body, "Произошла ошибка");
 
   switch (response.status) {

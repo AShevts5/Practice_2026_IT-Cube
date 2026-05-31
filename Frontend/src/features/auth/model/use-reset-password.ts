@@ -1,32 +1,18 @@
-import { publicRqClient } from "@/shared/api/instance";
-import type { ApiSchemas } from "@/shared/api/schema/index.ts";
 import { ROUTES } from "@/shared/model/routes";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useState } from "react";
 
-export function useResetPassword(token: string) {
+export function useResetPassword(_token: string) {
   const navigate = useNavigate();
+  const [isPending, setIsPending] = useState(false);
 
-  const mutation = publicRqClient.useMutation(
-    "post",
-    "/auth/reset-password/{token}",
-    {
-      onSuccess() {
-        toast.success("Пароль обновлён");
-        navigate(ROUTES.LOGIN);
-      },
-    },
-  );
-
-  const submit = (data: ApiSchemas["ResetPasswordRequest"]) => {
-    mutation.mutate({ params: { path: { token } }, body: data });
+  const reset = async (_password: string) => {
+    setIsPending(true);
+    toast.info("Сброс пароля пока не реализован в API бэкенда");
+    navigate(ROUTES.LOGIN);
+    setIsPending(false);
   };
 
-  return {
-    submit,
-    isPending: mutation.isPending,
-    errorMessage: mutation.isError
-      ? String(mutation.error)
-      : undefined,
-  };
-}
+  return { reset, isPending, errorMessage: undefined };
+};

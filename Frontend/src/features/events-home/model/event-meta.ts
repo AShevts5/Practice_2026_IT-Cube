@@ -30,6 +30,7 @@ export const eventTagsBySlug: Record<string, string[]> = {
 
 export const eventBrandBySlug: Record<string, string> = {
   "digital-breakthrough": "IT-КУБ",
+  "cifrovoj-proryv": "IT-КУБ",
   "data-olympiad": "DATA LAB",
   "product-intensive": "PRODUCT",
 };
