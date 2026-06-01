@@ -11,11 +11,17 @@ class SmtpEmailSender:
         message["Subject"] = subject
         message.set_content(body)
 
+        port = settings.smtp_port
+        use_ssl = port == 465
+        start_tls = not use_ssl and settings.smtp_tls
+
         await aiosmtplib.send(
             message,
             hostname=settings.smtp_host,
-            port=settings.smtp_port,
+            port=port,
             username=settings.smtp_user or None,
             password=settings.smtp_password or None,
-            start_tls=settings.smtp_tls,
+            use_tls=use_ssl,
+            start_tls=start_tls,
+            timeout=30,
         )
