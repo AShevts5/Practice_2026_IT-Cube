@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { RouterProvider } from "react-router-dom";
 import { CONFIG } from "@/shared/model/config";
+import { registerPwa } from "@/shared/pwa/register-pwa";
 import { router } from "./router.tsx";
 
 async function bootstrap() {
@@ -10,6 +11,8 @@ async function bootstrap() {
     const { enableMocking } = await import("@/shared/api/mocks/index.ts");
     await enableMocking();
   }
+
+  registerPwa();
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

@@ -1,5 +1,4 @@
-#!/bin/sh
-set -e
+﻿set -e
 
 echo "Running database migrations..."
 alembic upgrade head
