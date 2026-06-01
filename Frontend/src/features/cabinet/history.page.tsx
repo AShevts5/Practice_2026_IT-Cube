@@ -5,10 +5,10 @@ function CabinetHistoryPage() {
     <div>
       <CabinetPageHeader
         title="История"
-        description="История изменений команды"
+        description="Журнал действий команды"
       />
       <p className="text-muted-foreground text-sm">
-        Раздел пока не реализован в API бэкенда.
+        Здесь появится история ваших изменений.
       </p>
     </div>
   );

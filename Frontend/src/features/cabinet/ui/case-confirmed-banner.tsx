@@ -14,7 +14,7 @@ export function CaseConfirmedBanner({
         <p className="text-success font-semibold dark:text-emerald-700">
           Кейс подтверждён
         </p>
-        <p className="text-muted-foreground mt-1 text-sm leading-relaxed dark:text-emerald-900/70">
+        <p className="text-success-foreground/90 mt-1 text-base leading-relaxed dark:text-emerald-50/95">
           Ваша команда участвует в кейсе «{caseTitle}» в рамках мероприятия «
           {eventTitle}». Изменить выбор можно до дедлайна на этой странице.
         </p>
