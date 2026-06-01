@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "api": "npx openapi-typescript ./src/shared/api/schema/main.yaml -o ./src/shared/api/schema/generated.ts",
     "api:sync": "npm run api",
-    "pwa:assets": "node scripts/generate-pwa-assets.mjs assets/pwa-source-512.png"
+    "pwa:assets": "node scripts/generate-pwa-assets.mjs assets/logo-source.png"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans": "^5.2.10",
