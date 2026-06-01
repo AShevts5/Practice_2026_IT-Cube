@@ -15,6 +15,7 @@ if (!sourceIcon) {
 await mkdir(publicDir, { recursive: true });
 
 const iconSizes = [
+  ["favicon-32x32.png", 32],
   ["pwa-192x192.png", 192],
   ["pwa-512x512.png", 512],
   ["apple-touch-icon.png", 180],
@@ -45,7 +46,7 @@ await sharp({
         `<svg width="390" height="844" xmlns="http://www.w3.org/2000/svg">
           <rect width="390" height="844" fill="#f5f6fa"/>
           <rect x="0" y="0" width="390" height="56" fill="#ffffff"/>
-          <text x="20" y="36" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#1e293b">EventsPlatform</text>
+          <text x="20" y="36" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#1e293b">platformhackathons.ru</text>
           <rect x="20" y="80" width="350" height="140" rx="16" fill="#ffffff" stroke="#e2e8f0"/>
           <text x="36" y="120" font-family="Arial,sans-serif" font-size="16" font-weight="600" fill="#1e293b">Хакатон «Цифровой прорыв»</text>
           <text x="36" y="148" font-family="Arial,sans-serif" font-size="13" fill="#64748b">React · TypeScript · Python</text>
@@ -72,7 +73,7 @@ await sharp({
         `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
           <rect width="1280" height="720" fill="#f5f6fa"/>
           <rect x="0" y="0" width="1280" height="64" fill="#ffffff"/>
-          <text x="40" y="42" font-family="Arial,sans-serif" font-size="22" font-weight="600" fill="#1e293b">EventsPlatform</text>
+          <text x="40" y="42" font-family="Arial,sans-serif" font-size="22" font-weight="600" fill="#1e293b">platformhackathons.ru</text>
           <rect x="40" y="96" width="580" height="220" rx="20" fill="#ffffff" stroke="#e2e8f0"/>
           <rect x="660" y="96" width="580" height="220" rx="20" fill="#ffffff" stroke="#e2e8f0"/>
           <text x="64" y="150" font-family="Arial,sans-serif" font-size="24" font-weight="600" fill="#1e293b">Хакатон «Цифровой прорыв»</text>
