@@ -1,9 +1,10 @@
 import { authService } from "@/shared/api/services/auth";
 import { asFetchResult, getErrorMessage, parseApiError } from "@/shared/lib/errors";
-import { ROUTES } from "@/shared/model/routes";
+import { getCabinetHomeRoute, ROUTES } from "@/shared/model/routes";
 import type { AuthTarget } from "@/shared/model/session";
 import { useSession } from "@/shared/model/session";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useState } from "react";
 
 type LoginForm = {
@@ -20,7 +21,7 @@ function loginOrder(login: string): AuthTarget[] {
 
 export function useLogin() {
   const navigate = useNavigate();
-  const { setOtpChallenge } = useSession();
+  const { setOtpChallenge, login: storeSession } = useSession();
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -31,8 +32,9 @@ export function useLogin() {
     try {
       for (const target of loginOrder(data.login)) {
         const response = asFetchResult<{
-          challenge_id: number;
-          channel: string;
+          access_token?: string;
+          challenge_id?: number;
+          channel?: string;
         }>(await authService.startLogin(target, data));
         if (response.error || !response.data) {
           if (response.response?.status === 422) {
@@ -44,13 +46,22 @@ export function useLogin() {
           }
           continue;
         }
-        setOtpChallenge(
-          response.data.challenge_id,
-          response.data.channel,
-          target,
-        );
-        navigate(ROUTES.VERIFY_2FA);
-        return;
+        if (target === "team" && response.data.access_token) {
+          storeSession(response.data.access_token);
+          toast.success("Вход выполнен");
+          navigate(getCabinetHomeRoute("team"));
+          return;
+        }
+        if (response.data.challenge_id) {
+          setOtpChallenge(
+            response.data.challenge_id,
+            response.data.channel ?? "email",
+            target,
+          );
+          navigate(ROUTES.VERIFY_2FA);
+          return;
+        }
+        continue;
       }
 
       setErrorMessage("Неверный логин или пароль");

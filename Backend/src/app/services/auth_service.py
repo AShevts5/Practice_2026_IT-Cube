@@ -54,25 +54,14 @@ class AuthService:
         if elapsed.total_seconds() < settings.otp_resend_cooldown_seconds:
             raise ValidationError("Повторная отправка кода пока недоступна")
 
-    async def start_team_login(self, login: str, password: str) -> dict:
+    async def start_team_login(self, login: str, password: str) -> TokenResponse:
         result = await self.db.execute(select(Team).where(Team.login == login))
         team = result.scalar_one_or_none()
         if team is None or not verify_password(password, team.password_hash):
             raise UnauthorizedError("Неверный логин или пароль")
 
-        challenge, plain = await self.otp.create_challenge(
-            purpose=OtpPurpose.TEAM_LOGIN,
-            channel=OtpChannel.EMAIL,
-            subject_type="team",
-            subject_id=team.id,
-            destination=team.email,
-        )
-        await self._send_otp(challenge, plain)
-        return {
-            "challenge_id": challenge.id,
-            "channel": challenge.channel.value,
-            "message": "Код отправлен на email капитана",
-        }
+        token = create_access_token(str(team.id), "team")
+        return TokenResponse(access_token=token)
 
     async def resend_team_otp(self, challenge_id: int, *, channel: str) -> dict:
         challenge = await self._get_challenge(challenge_id, OtpPurpose.TEAM_LOGIN)

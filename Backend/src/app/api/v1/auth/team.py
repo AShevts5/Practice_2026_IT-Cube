@@ -7,11 +7,11 @@ from app.services.auth_service import AuthService
 
 router = APIRouter()
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 async def team_login(
     body: LoginRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> TokenResponse:
     return await AuthService(db).start_team_login(body.login, body.password)
 
 @router.post("/otp/send")

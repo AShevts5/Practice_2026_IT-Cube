@@ -683,7 +683,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OtpChallengeResponse"
+                $ref: "#/components/schemas/TokenResponse"
 
   /auth/team/otp/send:
     post:

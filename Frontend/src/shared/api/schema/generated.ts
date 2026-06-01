@@ -867,7 +867,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OtpChallengeResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
         };
