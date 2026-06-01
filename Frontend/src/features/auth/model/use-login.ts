@@ -1,4 +1,5 @@
 import { authService } from "@/shared/api/services/auth";
+import { getErrorMessage, parseApiError } from "@/shared/lib/errors";
 import { ROUTES } from "@/shared/model/routes";
 import type { AuthTarget } from "@/shared/model/session";
 import { useSession } from "@/shared/model/session";
@@ -37,6 +38,13 @@ export function useLogin() {
             target,
           );
           navigate(ROUTES.VERIFY_2FA);
+          return;
+        }
+        if (response.response?.status === 422) {
+          const body = await parseApiError(response.response);
+          setErrorMessage(
+            getErrorMessage(body, "Не удалось отправить код подтверждения"),
+          );
           return;
         }
       }

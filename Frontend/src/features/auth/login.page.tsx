@@ -12,8 +12,8 @@ function LoginPage() {
         <>
           <p className="text-muted-foreground mb-2 text-xs">
             Капитан до регистрации команды — email и пароль аккаунта. После
-            регистрации команды — логин team_… и пароль команды. Админ:
-            admin@itcube.local / admin123. OTP — Mailpit (http://localhost:8025).
+            регистрации команды — логин team_… и пароль команды. Код
+            подтверждения приходит на email.
           </p>
           <Link to={ROUTES.HOME}>К мероприятиям</Link>
           {" · "}

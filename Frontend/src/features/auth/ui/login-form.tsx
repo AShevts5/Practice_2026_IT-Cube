@@ -46,7 +46,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Логин или email</FormLabel>
               <FormControl>
-                <Input placeholder="team_xxxx или admin@itcube.local" {...field} />
+                <Input placeholder="team_xxxx или email" {...field} />
               </FormControl>
 
               <FormMessage />

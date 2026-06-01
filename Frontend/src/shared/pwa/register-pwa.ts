@@ -1,3 +1,4 @@
+import { SITE } from "@/shared/model/site";
 import { toast } from "sonner";
 import { registerSW } from "virtual:pwa-register";
 
@@ -9,7 +10,7 @@ export function registerPwa() {
   const updateSW = registerSW({
     immediate: true,
     onOfflineReady() {
-      toast.info("EventsPlatform готов к работе офлайн");
+      toast.info(`${SITE.host} готов к работе офлайн`);
     },
     onNeedRefresh() {
       toast("Доступно обновление", {

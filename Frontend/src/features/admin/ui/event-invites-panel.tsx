@@ -102,7 +102,7 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
           <Label>Добавить вручную</Label>
           <Input
             value={manualCode}
-            placeholder="Например, DEMO2026"
+            placeholder="Например, HACK2026"
             onChange={(e) => setManualCode(e.target.value.toUpperCase())}
           />
           <Button

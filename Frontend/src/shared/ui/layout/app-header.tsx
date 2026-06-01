@@ -1,3 +1,4 @@
+import { SITE } from "@/shared/model/site";
 import { getCabinetHomeRoute, ROUTES } from "@/shared/model/routes";
 import { useSession } from "@/shared/model/session";
 import { VIEWER_ROLE_LABELS, hasTeamCabinetAccess, isCaptain } from "@/shared/model/viewer-role";
@@ -15,7 +16,7 @@ export function AppHeader() {
     <header className="border-border/30 bg-background/70 shrink-0 border-b px-4 py-3 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
         <Link to={ROUTES.HOME} className="text-lg font-semibold">
-          EventsPlatform
+          {SITE.host}
         </Link>
         <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           <ThemeToggle />

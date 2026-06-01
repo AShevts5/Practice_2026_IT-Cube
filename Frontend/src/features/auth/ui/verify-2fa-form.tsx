@@ -38,8 +38,8 @@ export function Verify2faForm() {
               {channel === "sms" ? "Код отправлен по SMS" : "Код отправлен на почту"}
             </p>
             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-              Проверьте {channel === "sms" ? "SMS" : "входящие"} и введите код из
-              сообщения. В dev смотрите Mailpit: http://localhost:8025
+              Проверьте {channel === "sms" ? "SMS" : "входящие и папку «Спам»"} и
+              введите код из сообщения. Код действует ограниченное время.
             </p>
           </div>
         </div>

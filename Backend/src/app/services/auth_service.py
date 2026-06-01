@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -15,6 +16,8 @@ from app.integrations.sms import get_sms_sender
 from app.schemas.auth import TokenResponse
 from app.services.otp_service import OtpService
 
+logger = logging.getLogger(__name__)
+
 
 class AuthService:
     def __init__(self, db: AsyncSession) -> None:
@@ -24,10 +27,24 @@ class AuthService:
 
     async def _send_otp(self, challenge: OtpChallenge, plain: str) -> None:
         message = f"Ваш код подтверждения IT-Куб: {plain}. Действует {settings.otp_ttl_seconds // 60} мин."
-        if challenge.channel == OtpChannel.EMAIL:
-            await self.email.send(challenge.destination, "Код подтверждения IT-Куб", message)
-        else:
-            await get_sms_sender().send(challenge.destination, message)
+        try:
+            if challenge.channel == OtpChannel.EMAIL:
+                await self.email.send(
+                    challenge.destination,
+                    "Код подтверждения IT-Куб",
+                    message,
+                )
+            else:
+                await get_sms_sender().send(challenge.destination, message)
+        except Exception as exc:
+            logger.exception(
+                "OTP delivery failed: channel=%s destination=%s",
+                challenge.channel.value,
+                challenge.destination,
+            )
+            raise ValidationError(
+                "Не удалось отправить код. Попробуйте позже или проверьте папку «Спам»."
+            ) from exc
 
     async def _check_resend_allowed(self, challenge: OtpChallenge) -> None:
         created = challenge.created_at

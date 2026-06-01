@@ -168,7 +168,7 @@ function EventRegisterPage() {
         rqClient.queryOptions("get", "/captain/me"),
       );
     } catch {
-      toast.error("Не удалось зарегистрировать команду. Проверьте инвайт-код (демо: DEMO2026).");
+      toast.error("Не удалось зарегистрировать команду. Проверьте инвайт-код.");
     }
   });
 
@@ -248,7 +248,6 @@ function EventRegisterPage() {
       {step === 2 && (
         <Form {...inviteForm}>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <p className="text-muted-foreground text-sm">Демо-код: DEMO2026</p>
             <FormField
               control={inviteForm.control}
               name="code"
