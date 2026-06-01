@@ -1,5 +1,5 @@
 import { authService } from "@/shared/api/services/auth";
-import { getErrorMessage, parseApiError } from "@/shared/lib/errors";
+import { asFetchResult, getErrorMessage, parseApiError } from "@/shared/lib/errors";
 import { ROUTES } from "@/shared/model/routes";
 import type { AuthTarget } from "@/shared/model/session";
 import { useSession } from "@/shared/model/session";
@@ -30,23 +30,27 @@ export function useLogin() {
 
     try {
       for (const target of loginOrder(data.login)) {
-        const response = await authService.startLogin(target, data);
-        if (!response.error && response.data) {
-          setOtpChallenge(
-            response.data.challenge_id,
-            response.data.channel,
-            target,
-          );
-          navigate(ROUTES.VERIFY_2FA);
-          return;
+        const response = asFetchResult<{
+          challenge_id: number;
+          channel: string;
+        }>(await authService.startLogin(target, data));
+        if (response.error || !response.data) {
+          if (response.response?.status === 422) {
+            const body = await parseApiError(response.response);
+            setErrorMessage(
+              getErrorMessage(body, "Не удалось отправить код подтверждения"),
+            );
+            return;
+          }
+          continue;
         }
-        if (response.response?.status === 422) {
-          const body = await parseApiError(response.response);
-          setErrorMessage(
-            getErrorMessage(body, "Не удалось отправить код подтверждения"),
-          );
-          return;
-        }
+        setOtpChallenge(
+          response.data.challenge_id,
+          response.data.channel,
+          target,
+        );
+        navigate(ROUTES.VERIFY_2FA);
+        return;
       }
 
       setErrorMessage("Неверный логин или пароль");

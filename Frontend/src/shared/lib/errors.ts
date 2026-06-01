@@ -35,3 +35,13 @@ export function getErrorMessage(
 ): string {
   return body?.error?.message ?? detailToMessage(body?.detail) ?? fallback;
 }
+
+export type FetchResult<T> = {
+  data?: T;
+  error?: unknown;
+  response?: Response;
+};
+
+export function asFetchResult<T>(result: unknown): FetchResult<T> {
+  return result as FetchResult<T>;
+}
