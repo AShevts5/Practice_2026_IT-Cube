@@ -223,7 +223,7 @@ function AdminEventFormPage() {
         </div>
 
         <div className="border-border/60 space-y-3 rounded-2xl border p-4">
-          <p className="text-sm font-medium">Когда и где</p>
+          <p className="text-sm font-medium">Данные о проведении</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="starts_at">Начало</Label>
