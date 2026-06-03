@@ -113,6 +113,7 @@ async def seed() -> None:
                 InviteCode(
                     event_id=event.id,
                     code_hash=hash_code("DEMO2026"),
+                    code="DEMO2026",
                     label="demo",
                 )
             )
