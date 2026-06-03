@@ -15,6 +15,7 @@ class InviteService:
     def _to_schema(self, invite: InviteCode) -> InviteCodeSchema:
         return InviteCodeSchema(
             id=invite.id,
+            code=invite.code,
             label=invite.label,
             is_used=invite.used_at is not None,
             used_at=invite.used_at.isoformat() if invite.used_at else None,
@@ -47,6 +48,7 @@ class InviteService:
             invite = InviteCode(
                 event_id=event_id,
                 code_hash=hash_code(plain),
+                code=plain,
                 label=label,
             )
             self.db.add(invite)
@@ -80,6 +82,7 @@ class InviteService:
         invite = InviteCode(
             event_id=event_id,
             code_hash=hash_code(normalized),
+            code=normalized,
             label=label,
         )
         self.db.add(invite)
