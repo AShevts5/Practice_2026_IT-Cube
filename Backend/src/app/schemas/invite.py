@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 class InviteCodeSchema(BaseModel):
     id: int
+    code: str | None = None
     label: str | None
     is_used: bool
     used_at: str | None = None
