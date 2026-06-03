@@ -11,6 +11,8 @@ import {
   FormMessage,
 } from "@/shared/ui/kit/form";
 import { Input } from "@/shared/ui/kit/input";
+import { PhoneInput } from "@/shared/ui/kit/phone-input";
+import { formatRuPhoneInput, isValidRuPhone, normalizeRuPhone, RU_PHONE_ERROR } from "@/shared/lib/phone";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
@@ -23,7 +25,10 @@ const schema = z.object({
   team_name: z.string().min(2),
   captain_full_name: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().min(10),
+  phone: z
+    .string()
+    .min(10, RU_PHONE_ERROR)
+    .refine(isValidRuPhone, RU_PHONE_ERROR),
 });
 
 function CabinetEditPage() {
@@ -37,7 +42,7 @@ function CabinetEditPage() {
         team_name: team.team_name,
         captain_full_name: team.captain_full_name,
         email: team.email,
-        phone: team.phone,
+        phone: formatRuPhoneInput(team.phone),
       });
     }
   }, [team, form]);
@@ -82,7 +87,11 @@ function CabinetEditPage() {
         <Form {...form}>
           <form
             className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit((body) => mutation.mutate({ body }))}
+            onSubmit={form.handleSubmit((body) =>
+              mutation.mutate({
+                body: { ...body, phone: normalizeRuPhone(body.phone) },
+              }),
+            )}
           >
             {(
               [
@@ -100,7 +109,17 @@ function CabinetEditPage() {
                   <FormItem>
                     <FormLabel>{label}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      {name === "phone" ? (
+                        <PhoneInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      ) : (
+                        <Input {...field} />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>

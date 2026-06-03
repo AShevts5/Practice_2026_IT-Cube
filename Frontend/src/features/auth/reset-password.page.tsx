@@ -8,7 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shared/ui/kit/form";
-import { Input } from "@/shared/ui/kit/input";
+import { PasswordInput } from "@/shared/ui/kit/password-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, useParams } from "react-router-dom";
@@ -37,7 +37,7 @@ function ResetPasswordForm({ token }: { token: string }) {
             <FormItem>
               <FormLabel>Новый пароль</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <PasswordInput {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

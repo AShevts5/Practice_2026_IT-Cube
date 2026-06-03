@@ -15,7 +15,11 @@ export function AppHeader() {
   return (
     <header className="border-border/30 bg-background/70 shrink-0 border-b px-4 py-3 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-        <Link to={ROUTES.HOME} className="text-lg font-semibold">
+        <Link
+          to={ROUTES.HOME}
+          className="text-lg font-semibold transition-opacity hover:opacity-80"
+          title="На главную"
+        >
           {SITE.host}
         </Link>
         <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -38,9 +42,6 @@ export function AppHeader() {
               <span className="text-muted-foreground hidden text-sm sm:inline">
                 {VIEWER_ROLE_LABELS[viewerRole]}
               </span>
-              <Button asChild variant="ghost" size="sm">
-                <Link to={ROUTES.HOME}>На главную</Link>
-              </Button>
               <Button variant="outline" size="sm" onClick={() => logout()}>
                 Выйти
               </Button>

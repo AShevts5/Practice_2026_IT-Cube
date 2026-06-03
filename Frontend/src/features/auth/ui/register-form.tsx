@@ -8,10 +8,12 @@ import {
   Form,
 } from "@/shared/ui/kit/form";
 import { Input } from "@/shared/ui/kit/input";
+import { PasswordInput } from "@/shared/ui/kit/password-input";
+import { PhoneInput } from "@/shared/ui/kit/phone-input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { isValidRuPhone, normalizeRuPhone, RU_PHONE_ERROR, RU_PHONE_HINT } from "@/shared/lib/phone";
+import { isValidRuPhone, normalizeRuPhone, RU_PHONE_ERROR } from "@/shared/lib/phone";
 import { useRegister } from "../model/use-register";
 
 const registerSchema = z
@@ -80,9 +82,14 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Телефон</FormLabel>
               <FormControl>
-                <Input placeholder="+79001234567" inputMode="tel" {...field} />
+                <PhoneInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
-              <p className="text-muted-foreground text-xs">{RU_PHONE_HINT}</p>
               <FormMessage />
             </FormItem>
           )}
@@ -94,7 +101,7 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Пароль</FormLabel>
               <FormControl>
-                <Input placeholder="******" type="password" {...field} />
+                <PasswordInput placeholder="******" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -107,7 +114,7 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Подтвердите пароль</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <PasswordInput {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

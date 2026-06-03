@@ -8,6 +8,7 @@ import {
   Form,
 } from "@/shared/ui/kit/form";
 import { Input } from "@/shared/ui/kit/input";
+import { PasswordInput } from "@/shared/ui/kit/password-input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +61,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Пароль</FormLabel>
               <FormControl>
-                <Input placeholder="******" type="password" {...field} />
+                <PasswordInput placeholder="******" {...field} />
               </FormControl>
 
               <FormMessage />
