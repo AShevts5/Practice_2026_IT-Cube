@@ -11,6 +11,7 @@ class InviteCode(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), index=True)
     code_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    code: Mapped[str | None] = mapped_column(String(32), nullable=True)
     label: Mapped[str | None] = mapped_column(String(128), nullable=True)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
