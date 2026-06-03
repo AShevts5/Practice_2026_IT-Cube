@@ -114,6 +114,13 @@ components:
         - registration_closed
         - finished
 
+    EventFormat:
+      type: string
+      enum:
+        - online
+        - offline
+        - hybrid
+
     EventCard:
       type: object
       required:
@@ -128,6 +135,7 @@ components:
         - total_seats_available
         - total_seats_limit
         - total_teams_registered
+        - location
       properties:
         id:
           type: integer
@@ -150,6 +158,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        location:
+          type: string
+          description: Место проведения
+        format:
+          $ref: "#/components/schemas/EventFormat"
+          nullable: true
+        min_age:
+          type: integer
+          nullable: true
+          description: Минимальный возраст участников
         status:
           $ref: "#/components/schemas/EventStatus"
         registration_open:
@@ -343,6 +361,15 @@ components:
           type: string
           format: date-time
           nullable: true
+        location:
+          type: string
+        format:
+          anyOf:
+            - $ref: "#/components/schemas/EventFormat"
+            - type: "null"
+        min_age:
+          type: integer
+          nullable: true
         tracks:
           type: array
           items:
@@ -368,6 +395,15 @@ components:
         ends_at:
           type: string
           format: date-time
+          nullable: true
+        location:
+          type: string
+        format:
+          anyOf:
+            - $ref: "#/components/schemas/EventFormat"
+            - type: "null"
+        min_age:
+          type: integer
           nullable: true
         status:
           $ref: "#/components/schemas/EventStatus"
@@ -399,6 +435,14 @@ components:
         ends_at:
           type: string
           format: date-time
+          nullable: true
+        location:
+          type: string
+        format:
+          $ref: "#/components/schemas/EventFormat"
+          nullable: true
+        min_age:
+          type: integer
           nullable: true
         status:
           $ref: "#/components/schemas/EventStatus"

@@ -486,6 +486,8 @@ export interface components {
         };
         /** @enum {string} */
         EventStatus: "draft" | "published" | "registration_open" | "registration_closed" | "finished";
+        /** @enum {string} */
+        EventFormat: "online" | "offline" | "hybrid";
         EventCard: {
             id: number;
             title: string;
@@ -498,6 +500,11 @@ export interface components {
             starts_at?: string | null;
             /** Format: date-time */
             ends_at?: string | null;
+            /** @description Место проведения */
+            location: string;
+            format?: components["schemas"]["EventFormat"];
+            /** @description Минимальный возраст участников */
+            min_age?: number | null;
             status: components["schemas"]["EventStatus"];
             registration_open: boolean;
             total_seats_available: number;
@@ -580,6 +587,9 @@ export interface components {
             starts_at?: string | null;
             /** Format: date-time */
             ends_at?: string | null;
+            location?: string;
+            format?: components["schemas"]["EventFormat"] | null;
+            min_age?: number | null;
             tracks?: components["schemas"]["TrackCreate"][];
         };
         EventUpdate: {
@@ -592,6 +602,9 @@ export interface components {
             starts_at?: string | null;
             /** Format: date-time */
             ends_at?: string | null;
+            location?: string;
+            format?: components["schemas"]["EventFormat"] | null;
+            min_age?: number | null;
             status?: components["schemas"]["EventStatus"];
             tracks?: components["schemas"]["TrackUpsert"][];
         };
@@ -606,6 +619,9 @@ export interface components {
             starts_at?: string | null;
             /** Format: date-time */
             ends_at?: string | null;
+            location?: string;
+            format?: components["schemas"]["EventFormat"];
+            min_age?: number | null;
             status: components["schemas"]["EventStatus"];
             tracks: components["schemas"]["TrackPublic"][];
         };

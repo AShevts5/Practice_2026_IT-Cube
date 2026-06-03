@@ -26,6 +26,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  EVENT_FORMAT_LABELS,
+  fromDatetimeLocalValue,
+  toDatetimeLocalValue,
+} from "@/shared/lib/event-info.ts";
 
 const STATUS_OPTIONS: ApiSchemas["EventStatus"][] = [
   "draft",
@@ -34,6 +39,10 @@ const STATUS_OPTIONS: ApiSchemas["EventStatus"][] = [
   "registration_closed",
   "finished",
 ];
+
+const FORMAT_OPTIONS: ApiSchemas["EventFormat"][] = ["online", "offline", "hybrid"];
+
+const FORMAT_NONE = "__none__";
 
 function AdminEventFormPage() {
   const { eventId } = useParams();
@@ -54,6 +63,11 @@ function AdminEventFormPage() {
   const [title, setTitle] = useState("");
   const [keywords, setKeywords] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [eventFormat, setEventFormat] = useState<string>(FORMAT_NONE);
+  const [minAge, setMinAge] = useState("");
+  const [startsAtLocal, setStartsAtLocal] = useState("");
+  const [endsAtLocal, setEndsAtLocal] = useState("");
   const [status, setStatus] = useState<ApiSchemas["EventStatus"]>("draft");
   const [tracks, setTracks] = useState<TrackDraft[]>([createEmptyTrack()]);
 
@@ -62,6 +76,11 @@ function AdminEventFormPage() {
     setTitle(event.title);
     setKeywords(event.keywords ?? "");
     setDescription(event.description);
+    setLocation(event.location ?? "");
+    setEventFormat(event.format ?? FORMAT_NONE);
+    setMinAge(event.min_age != null ? String(event.min_age) : "");
+    setStartsAtLocal(toDatetimeLocalValue(event.starts_at));
+    setEndsAtLocal(toDatetimeLocalValue(event.ends_at));
     setStatus(event.status);
     setTracks(tracksFromApi(event.tracks));
   }, [event]);
@@ -97,11 +116,33 @@ function AdminEventFormPage() {
     },
   );
 
+  const buildEventMeta = () => {
+    const parsedMinAge = minAge.trim() ? Number(minAge) : null;
+    if (minAge.trim() && (!Number.isInteger(parsedMinAge) || parsedMinAge! < 0)) {
+      toast.error("Укажите корректный минимальный возраст");
+      return null;
+    }
+
+    return {
+      location: location.trim(),
+      format:
+        eventFormat === FORMAT_NONE
+          ? null
+          : (eventFormat as ApiSchemas["EventFormat"]),
+      min_age: parsedMinAge,
+      starts_at: fromDatetimeLocalValue(startsAtLocal),
+      ends_at: fromDatetimeLocalValue(endsAtLocal),
+    };
+  };
+
   const submit = () => {
     if (!title.trim()) {
       toast.error("Укажите название");
       return;
     }
+
+    const meta = buildEventMeta();
+    if (!meta) return;
 
     const tracksPayload = isEdit
       ? tracksToUpsertPayload(tracks)
@@ -119,6 +160,7 @@ function AdminEventFormPage() {
           description,
           keywords: keywords.trim(),
           status,
+          ...meta,
           tracks: tracksPayload,
         },
       });
@@ -131,6 +173,7 @@ function AdminEventFormPage() {
         slug: slugifyTitle(title),
         description,
         keywords: keywords.trim(),
+        ...meta,
         tracks: tracksPayload,
       },
     });
@@ -178,6 +221,73 @@ function AdminEventFormPage() {
             className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/30 w-full min-w-0 rounded-xl border px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] md:text-sm"
           />
         </div>
+
+        <div className="border-border/60 space-y-3 rounded-2xl border p-4">
+          <p className="text-sm font-medium">Когда и где</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="starts_at">Начало</Label>
+              <Input
+                id="starts_at"
+                type="datetime-local"
+                value={startsAtLocal}
+                onChange={(e) => setStartsAtLocal(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ends_at">Окончание</Label>
+              <Input
+                id="ends_at"
+                type="datetime-local"
+                value={endsAtLocal}
+                onChange={(e) => setEndsAtLocal(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="location">Место</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="г. Москва, адрес площадки"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Формат</Label>
+              <Select value={eventFormat} onValueChange={setEventFormat}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Не указан" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={FORMAT_NONE}>Не указан</SelectItem>
+                  {FORMAT_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {EVENT_FORMAT_LABELS[option]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="min_age">Минимальный возраст</Label>
+              <Input
+                id="min_age"
+                type="number"
+                min={0}
+                max={120}
+                value={minAge}
+                onChange={(e) => setMinAge(e.target.value)}
+                placeholder="16"
+              />
+              <p className="text-muted-foreground mt-1 text-xs">
+                С какого возраста можно участвовать; оставьте пустым, если без ограничения
+              </p>
+            </div>
+          </div>
+        </div>
+
         {isEdit ? (
           <div>
             <Label>Статус</Label>

@@ -11,6 +11,7 @@ import { Link, useParams } from "react-router-dom";
 import { useSession } from "@/shared/model/session";
 import { hasTeamCabinetAccess, isGuest, isCaptain } from "@/shared/model/viewer-role";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
+import { EventInfoBlock } from "@/shared/ui/event-info-block.tsx";
 
 const statusLabels: Record<ApiSchemas["EventStatus"], string> = {
   draft: "Черновик",
@@ -70,9 +71,17 @@ function EventDetailPage() {
           </div>
         }
       />
-      <p className="mb-6 text-sm">
-        Свободных мест: <strong>{event.total_seats_available}</strong>
-      </p>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">О мероприятии</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <EventInfoBlock event={event} />
+          <p className="text-sm">
+            Свободных мест: <strong>{event.total_seats_available}</strong>
+          </p>
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader>

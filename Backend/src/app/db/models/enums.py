@@ -7,6 +7,12 @@ class EventStatus(str, enum.Enum):
     REGISTRATION_CLOSED = "registration_closed"
     FINISHED = "finished"
 
+
+class EventFormat(str, enum.Enum):
+    ONLINE = "online"
+    OFFLINE = "offline"
+    HYBRID = "hybrid"
+
 class RegistrationStatus(str, enum.Enum):
     OPEN = "open"
     CLOSED = "closed"

@@ -14,7 +14,8 @@ import { KeywordTags } from "@/shared/ui/keyword-tags.tsx";
 import { Button } from "@/shared/ui/kit/button";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { Link } from "react-router-dom";
-import { CalendarIcon, ChevronDownIcon } from "lucide-react";
+import { EventInfoBlock } from "@/shared/ui/event-info-block.tsx";
+import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 
 type CardStatus = "active" | "completed" | "draft";
@@ -37,21 +38,6 @@ function toCardStatus(status: ApiSchemas["EventStatus"]): CardStatus {
   if (status === "registration_open" || status === "published") return "active";
   if (status === "finished" || status === "registration_closed") return "completed";
   return "draft";
-}
-
-function formatEventDates(startsAt?: string | null, endsAt?: string | null) {
-  if (!startsAt) return null;
-  const start = new Date(startsAt).toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-  });
-  if (!endsAt) return start;
-  const end = new Date(endsAt).toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  return `${start} — ${end}`;
 }
 
 function trackOccupancyClasses(occupied: number, limit: number) {
@@ -153,7 +139,6 @@ export function EventCard({ event }: { event: ApiSchemas["EventCard"] }) {
   const cardStatus = toCardStatus(event.status);
   const tags = getEventTags(event.slug, event.keywords);
   const brand = event.brand?.trim() || getEventBrand(event.slug);
-  const dates = formatEventDates(event.starts_at, event.ends_at);
   const fewSpots = event.total_seats_available <= 5 && event.total_seats_available > 0;
   const seatsLabel =
     event.total_seats_limit > 0
@@ -203,12 +188,7 @@ export function EventCard({ event }: { event: ApiSchemas["EventCard"] }) {
 
       <h2 className="mt-3 text-base leading-snug font-semibold">{event.title}</h2>
 
-      {dates ? (
-        <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-sm">
-          <CalendarIcon className="size-4 shrink-0" />
-          {dates}
-        </p>
-      ) : null}
+      <EventInfoBlock event={event} compact />
 
       <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-snug">
         {event.description}

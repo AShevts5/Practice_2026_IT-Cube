@@ -2,11 +2,11 @@ from datetime import datetime
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, String, Text
+from sqlalchemy import DateTime, Enum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
-from app.db.models.enums import EventStatus
+from app.db.models.enums import EventFormat, EventStatus
 
 if TYPE_CHECKING:
     from app.db.models.invite_code import InviteCode
@@ -25,6 +25,17 @@ class Event(Base, TimestampMixin):
     brand: Mapped[str] = mapped_column(String(64), default="", nullable=False)
     starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    location: Mapped[str] = mapped_column(String(512), default="", nullable=False)
+    format: Mapped[EventFormat | None] = mapped_column(
+        Enum(
+            EventFormat,
+            name="event_format",
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        nullable=True,
+    )
+    min_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[EventStatus] = mapped_column(
         Enum(
             EventStatus,

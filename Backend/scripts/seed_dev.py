@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.core.security import hash_code, hash_password
 from app.db.models.admin_user import AdminUser
-from app.db.models.enums import EventStatus
+from app.db.models.enums import EventFormat, EventStatus
 from app.db.models.event import Event
 from app.db.models.invite_code import InviteCode
 from app.db.models.track import Track
@@ -88,6 +88,9 @@ async def seed() -> None:
                 brand="IT-КУБ",
                 starts_at=datetime(2026, 6, 1, 9, 0, tzinfo=UTC),
                 ends_at=datetime(2026, 6, 15, 18, 0, tzinfo=UTC),
+                location="г. Москва, площадка IT-Куб",
+                format=EventFormat.HYBRID,
+                min_age=16,
                 status=EventStatus.REGISTRATION_OPEN,
             )
             session.add(event)
@@ -123,6 +126,12 @@ async def seed() -> None:
             event.brand = event.brand or "IT-КУБ"
             event.starts_at = event.starts_at or datetime(2026, 6, 1, 9, 0, tzinfo=UTC)
             event.ends_at = event.ends_at or datetime(2026, 6, 15, 18, 0, tzinfo=UTC)
+            if not event.location:
+                event.location = "г. Москва, площадка IT-Куб"
+            if event.format is None:
+                event.format = EventFormat.HYBRID
+            if event.min_age is None:
+                event.min_age = 16
             print(f"Event metadata updated: {event_slug}")
 
         if event is not None:

@@ -50,6 +50,9 @@ class EventService:
             brand=event.brand,
             starts_at=event.starts_at,
             ends_at=event.ends_at,
+            location=event.location,
+            format=event.format,
+            min_age=event.min_age,
             status=event.status,
             registration_open=is_registration_open(event.status),
             total_seats_available=available,
@@ -69,6 +72,9 @@ class EventService:
             brand=event.brand,
             starts_at=event.starts_at,
             ends_at=event.ends_at,
+            location=event.location,
+            format=event.format,
+            min_age=event.min_age,
             status=event.status,
             tracks=tracks,
         )
@@ -127,6 +133,9 @@ class EventService:
             brand=data.brand,
             starts_at=data.starts_at,
             ends_at=data.ends_at,
+            location=data.location,
+            format=data.format,
+            min_age=data.min_age,
             status=EventStatus.DRAFT,
         )
         self.db.add(event)
@@ -240,10 +249,16 @@ class EventService:
             event.keywords = data.keywords
         if data.brand is not None:
             event.brand = data.brand
-        if data.starts_at is not None:
+        if "starts_at" in data.model_fields_set:
             event.starts_at = data.starts_at
-        if data.ends_at is not None:
+        if "ends_at" in data.model_fields_set:
             event.ends_at = data.ends_at
+        if data.location is not None:
+            event.location = data.location
+        if "format" in data.model_fields_set:
+            event.format = data.format
+        if "min_age" in data.model_fields_set:
+            event.min_age = data.min_age
         if data.status is not None:
             event.status = data.status
 

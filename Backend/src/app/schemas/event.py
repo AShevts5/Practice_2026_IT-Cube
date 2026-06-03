@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.db.models.enums import EventStatus
+from app.db.models.enums import EventFormat, EventStatus
 
 class TrackPublicSchema(BaseModel):
     id: int
@@ -27,6 +27,9 @@ class EventCardSchema(BaseModel):
     brand: str = ""
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    location: str = ""
+    format: EventFormat | None = None
+    min_age: int | None = Field(default=None, ge=0, le=120)
     status: EventStatus
     registration_open: bool
     total_seats_available: int
@@ -65,6 +68,9 @@ class EventCreateSchema(BaseModel):
     brand: str = ""
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    location: str = ""
+    format: EventFormat | None = None
+    min_age: int | None = Field(default=None, ge=0, le=120)
     tracks: list[TrackCreateSchema] = Field(default_factory=list)
 
 
@@ -76,6 +82,9 @@ class EventUpdateSchema(BaseModel):
     brand: str | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    location: str | None = None
+    format: EventFormat | None = None
+    min_age: int | None = Field(default=None, ge=0, le=120)
     status: EventStatus | None = None
     tracks: list[TrackUpsertSchema] | None = None
 
@@ -89,6 +98,9 @@ class EventAdminSchema(BaseModel):
     brand: str = ""
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    location: str = ""
+    format: EventFormat | None = None
+    min_age: int | None = None
     status: EventStatus
     tracks: list[TrackPublicSchema]
 
