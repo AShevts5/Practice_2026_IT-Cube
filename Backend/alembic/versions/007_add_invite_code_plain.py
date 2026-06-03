@@ -1,6 +1,5 @@
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
 
 revision: str = "007"
@@ -10,11 +9,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "invite_codes",
-        sa.Column("code", sa.String(length=32), nullable=True),
+    op.execute(
+        "ALTER TABLE invite_codes ADD COLUMN IF NOT EXISTS code VARCHAR(32)"
     )
 
 
 def downgrade() -> None:
-    op.drop_column("invite_codes", "code")
+    op.execute("ALTER TABLE invite_codes DROP COLUMN IF EXISTS code")
