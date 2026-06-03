@@ -133,7 +133,7 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
           <thead className="bg-muted/50">
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
-              <th className="px-3 py-2 text-left">Метка</th>
+              <th className="px-3 py-2 text-left">Инвайт-код</th>
               <th className="px-3 py-2 text-left">Использован</th>
               <th className="px-3 py-2 text-left">Создан</th>
             </tr>
@@ -142,7 +142,7 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
             {(invites ?? []).map((invite) => (
               <tr key={invite.id} className="border-t">
                 <td className="px-3 py-2">{invite.id}</td>
-                <td className="px-3 py-2">{invite.label ?? "—"}</td>
+                <td className="px-3 py-2 font-mono">{invite.code ?? "—"}</td>
                 <td className="px-3 py-2">{invite.is_used ? "Да" : "Нет"}</td>
                 <td className="px-3 py-2">
                   {new Date(invite.created_at).toLocaleDateString("ru-RU")}
