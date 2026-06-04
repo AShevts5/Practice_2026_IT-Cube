@@ -48,6 +48,14 @@ export const router = createBrowserRouter([
             lazy: lazyPage(() => import("@/features/auth/login.page.tsx")),
           },
           {
+            path: ROUTES.OAUTH_CALLBACK,
+            lazy: lazyPage(() => import("@/features/auth/oauth-callback.page.tsx")),
+          },
+          {
+            path: ROUTES.OAUTH_COMPLETE,
+            lazy: lazyPage(() => import("@/features/auth/oauth-complete.page.tsx")),
+          },
+          {
             path: ROUTES.VERIFY_2FA,
             lazy: lazyPage(() => import("@/features/auth/verify-2fa.page.tsx")),
           },
