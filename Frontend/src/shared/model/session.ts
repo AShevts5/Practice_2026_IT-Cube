@@ -15,20 +15,34 @@ export type Session = {
 const TOKEN_KEY = "token";
 const CHALLENGE_KEY = "otpChallenge";
 const AUTH_TARGET_KEY = "authTarget";
+const OTP_FLOW_KEY = "otpFlow";
+
+export type OtpFlow = "login" | "register";
 
 type OtpChallenge = {
   challengeId: number;
   channel: string;
+  flow: OtpFlow;
 };
 
 export const useSession = createGStore(() => {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [otpChallenge, setOtpChallengeState] = useState<OtpChallenge | null>(() => {
     const raw = sessionStorage.getItem(CHALLENGE_KEY);
-    return raw ? (JSON.parse(raw) as OtpChallenge) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<OtpChallenge>;
+    if (typeof parsed.challengeId !== "number") return null;
+    return {
+      challengeId: parsed.challengeId,
+      channel: parsed.channel ?? "email",
+      flow: parsed.flow ?? "login",
+    };
   });
   const [authTarget, setAuthTargetState] = useState<AuthTarget | null>(() =>
     (sessionStorage.getItem(AUTH_TARGET_KEY) as AuthTarget | null) ?? null,
+  );
+  const [otpFlow, setOtpFlowState] = useState<OtpFlow | null>(() =>
+    (sessionStorage.getItem(OTP_FLOW_KEY) as OtpFlow | null) ?? null,
   );
 
   const login = (accessToken: string) => {
@@ -43,19 +57,28 @@ export const useSession = createGStore(() => {
     clearOtpChallenge();
   };
 
-  const setOtpChallenge = (challengeId: number, channel: string, target: AuthTarget) => {
-    const value = { challengeId, channel };
+  const setOtpChallenge = (
+    challengeId: number,
+    channel: string,
+    target: AuthTarget,
+    flow: OtpFlow = "login",
+  ) => {
+    const value = { challengeId, channel, flow };
     sessionStorage.setItem(CHALLENGE_KEY, JSON.stringify(value));
     sessionStorage.setItem(AUTH_TARGET_KEY, target);
+    sessionStorage.setItem(OTP_FLOW_KEY, flow);
     setOtpChallengeState(value);
     setAuthTargetState(target);
+    setOtpFlowState(flow);
   };
 
   const clearOtpChallenge = () => {
     sessionStorage.removeItem(CHALLENGE_KEY);
     sessionStorage.removeItem(AUTH_TARGET_KEY);
+    sessionStorage.removeItem(OTP_FLOW_KEY);
     setOtpChallengeState(null);
     setAuthTargetState(null);
+    setOtpFlowState(null);
   };
 
   const session = useMemo(
@@ -91,6 +114,7 @@ export const useSession = createGStore(() => {
     token,
     otpChallenge,
     authTarget,
+    otpFlow,
     setOtpChallenge,
     clearOtpChallenge,
     isAuthenticated,
