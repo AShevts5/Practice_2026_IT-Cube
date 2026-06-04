@@ -257,24 +257,7 @@ systemctl reload caddy
 
 ---
 
-## 7. Прод не поднялся (API unhealthy / set: not found)
-
-**Когда:** `itcube-api` в Restarting, фронт в Created, в логах `set: not found` или `name resolution`.
-
-```bash
-cd /opt/Practice_2026_IT-Cube
-git pull
-chmod +x scripts/repair-prod.sh
-./scripts/repair-prod.sh
-```
-
-Скрипт проверяет, что в `Backend/.env.docker` **нет** `DATABASE_URL=...@localhost`, чинит CRLF entrypoint, поднимает db → api → frontend и ждёт health.
-
-Вручную: удалите строку `DATABASE_URL` из `Backend/.env.docker`, если она там есть.
-
----
-
-## 8. Аварийно: поднять без пересборки
+## 7. Аварийно: поднять без пересборки
 
 **Когда:** сборка зависла или прервалась, образы уже собраны.
 
@@ -312,8 +295,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 | Файл | Где запускать | Назначение |
 |------|---------------|------------|
-| `scripts/deploy-vps.sh` | VPS | `api` / `frontend` / `all` (ждёт healthy API) |
-| `scripts/repair-prod.sh` | VPS | Полный подъём прода после сбоя API |
+| `scripts/deploy-vps.sh` | VPS | `api` / `frontend` / `all` |
 | `scripts/build-frontend-image.ps1` | Windows | Сборка образа фронта и загрузка на VPS |
 
 Пример:
