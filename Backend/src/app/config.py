@@ -44,6 +44,20 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     export_max_rows: int = 10_000
 
+    oauth_frontend_redirect: str = "http://localhost:5173/auth/callback"
+    oauth_backend_callback_base: str = "http://localhost:8000/api/v1/auth/oauth"
+    oauth_state_ttl_seconds: int = 600
+    oauth_signup_ttl_seconds: int = 1800
+
+    github_client_id: str = ""
+    github_client_secret: str = ""
+
+    yandex_client_id: str = ""
+    yandex_client_secret: str = ""
+
+    vk_client_id: str = ""
+    vk_client_secret: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
