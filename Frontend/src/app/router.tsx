@@ -79,6 +79,10 @@ export const router = createBrowserRouter([
             lazy: () => import("@/features/cabinet/history.page"),
           },
           {
+            path: ROUTES.CABINET_CASE_MATERIALS,
+            lazy: () => import("@/features/cabinet/case-materials.page"),
+          },
+          {
             loader: captainOnlyLoader,
             element: <CaptainOnlyRoute />,
             children: [
