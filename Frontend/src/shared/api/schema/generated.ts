@@ -534,6 +534,7 @@ export interface components {
         TeamUpdate: {
             team_name?: string;
             captain_full_name?: string;
+            /** Format: email */
             email?: string;
             phone?: string;
             track_id?: number;
@@ -659,6 +660,7 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -733,7 +735,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"];
+                    "application/json": components["schemas"]["OtpChallengeResponse"];
                 };
             };
         };
