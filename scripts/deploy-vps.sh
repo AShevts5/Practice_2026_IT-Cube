@@ -13,21 +13,41 @@ TARGET="${1:-api}"
 echo "→ git pull"
 git pull
 
+wait_api_healthy() {
+  local i
+  for i in $(seq 1 45); do
+    if "${COMPOSE[@]}" exec -T api curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "API unhealthy" >&2
+  "${COMPOSE[@]}" logs api --tail 40
+  return 1
+}
+
 run_migrations() {
   echo "→ alembic upgrade"
   "${COMPOSE[@]}" exec -T api alembic upgrade head
 }
 
 deploy_api() {
+  sed -i 's/\r$//' Backend/docker-entrypoint.sh 2>/dev/null || true
   echo "→ build & up api"
   "${COMPOSE[@]}" build api
-  "${COMPOSE[@]}" up -d --no-build api
+  "${COMPOSE[@]}" up -d --no-build --force-recreate api
+  wait_api_healthy
   run_migrations
 }
 
 deploy_frontend() {
   echo "→ build & up frontend"
   "${COMPOSE[@]}" build frontend
+  if ! "${COMPOSE[@]}" ps --status running 2>/dev/null | grep -q itcube-api; then
+    deploy_api
+  else
+    wait_api_healthy || deploy_api
+  fi
   "${COMPOSE[@]}" up -d --no-build --force-recreate frontend
 }
 
