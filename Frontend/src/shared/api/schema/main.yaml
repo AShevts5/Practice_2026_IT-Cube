@@ -105,30 +105,6 @@ components:
         token_type:
           type: string
 
-    ForgotPasswordRequest:
-      type: object
-      required: [email]
-      properties:
-        email:
-          type: string
-          format: email
-
-    ResetPasswordRequest:
-      type: object
-      required: [password]
-      properties:
-        password:
-          type: string
-          minLength: 6
-          maxLength: 128
-
-    MessageResponse:
-      type: object
-      required: [message]
-      properties:
-        message:
-          type: string
-
     OAuthCompleteRequest:
       type: object
       required: [signup_token, full_name, phone]
@@ -608,6 +584,75 @@ components:
         totalPages:
           type: integer
 
+    AiChatMessage:
+      type: object
+      required: [id, role, content, created_at]
+      properties:
+        id:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        created_at:
+          type: string
+
+    AiChatSession:
+      type: object
+      required: [id, client_key]
+      properties:
+        id:
+          type: integer
+        client_key:
+          type: string
+
+    AiChatSessionCreateRequest:
+      type: object
+      required: [client_key]
+      properties:
+        client_key:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    AiChatSessionResponse:
+      type: object
+      required: [session, messages, suggested_questions]
+      properties:
+        session:
+          $ref: "#/components/schemas/AiChatSession"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatMessage"
+        suggested_questions:
+          type: array
+          items:
+            type: string
+
+    AiChatSendMessageRequest:
+      type: object
+      required: [client_key, text]
+      properties:
+        client_key:
+          type: string
+          minLength: 8
+          maxLength: 64
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    AiChatSendMessageResponse:
+      type: object
+      required: [user_message, assistant_message]
+      properties:
+        user_message:
+          $ref: "#/components/schemas/AiChatMessage"
+        assistant_message:
+          $ref: "#/components/schemas/AiChatMessage"
+
 paths:
   /public/events:
     get:
@@ -640,6 +685,73 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EventDetail"
+
+  /public/ai-chat/sessions:
+    post:
+      operationId: startAiChatSession
+      tags: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatSessionCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatSessionResponse"
+
+  /public/ai-chat/sessions/{session_id}:
+    get:
+      operationId: getAiChatSession
+      tags: [public]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: client_key
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatSessionResponse"
+
+  /public/ai-chat/sessions/{session_id}/messages:
+    post:
+      operationId: sendAiChatMessage
+      tags: [public]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatSendMessageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatSendMessageResponse"
 
   /registration/events/{event_slug}/teams:
     post:
@@ -876,48 +988,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TokenResponse"
-
-  /auth/forgot-password:
-    post:
-      operationId: forgotPassword
-      tags: [auth]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ForgotPasswordRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
-
-  /auth/reset-password/{token}:
-    post:
-      operationId: resetPassword
-      tags: [auth]
-      parameters:
-        - name: token
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ResetPasswordRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
 
   /team/me:
     get:
