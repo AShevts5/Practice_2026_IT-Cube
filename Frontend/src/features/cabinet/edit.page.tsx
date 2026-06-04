@@ -58,7 +58,11 @@ function CabinetEditPage() {
     return <Skeleton className="h-64 w-full rounded-2xl" />;
   }
 
-  if (team && !team.can_manage) {
+  if (!team) {
+    return <p className="text-destructive text-sm">Не удалось загрузить данные команды</p>;
+  }
+
+  if (!team.can_manage) {
     return (
       <div>
         <CabinetPageHeader

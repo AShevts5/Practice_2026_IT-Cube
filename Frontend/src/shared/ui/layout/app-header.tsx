@@ -13,16 +13,16 @@ export function AppHeader() {
   const showCabinet = hasTeamCabinetAccess(viewerRole, captain?.has_team);
 
   return (
-    <header className="border-border/30 bg-background/70 shrink-0 border-b px-4 py-3 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+    <header className="border-border/30 bg-background/70 shrink-0 border-b px-3 py-3 backdrop-blur-md sm:px-4">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <Link
           to={ROUTES.HOME}
-          className="text-lg font-semibold transition-opacity hover:opacity-80"
+          className="max-w-full truncate text-base font-semibold transition-opacity hover:opacity-80 sm:text-lg"
           title="На главную"
         >
           {SITE.host}
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <nav className="flex flex-wrap items-center justify-start gap-2 sm:justify-end sm:gap-3">
           <ThemeToggle />
           {isAuthenticated && session ? (
             <>

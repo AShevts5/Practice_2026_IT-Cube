@@ -122,7 +122,18 @@
 }
 
 @layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        overflow-x: hidden;
+    }
+
     body {
         @apply bg-background text-foreground antialiased;
+        overflow-x: hidden;
+    }
+
+    #root {
+        overflow-x: hidden;
+        width: 100%;
     }
 }

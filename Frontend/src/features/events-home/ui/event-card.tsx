@@ -92,17 +92,21 @@ function EventCardTracks({
                       slug,
                       caseId: String(track.id),
                     })}
-                    className="group relative block rounded-xl border bg-muted/30 px-4 py-3 pr-16 text-sm transition-colors hover:bg-muted/45"
+                    className="group block rounded-xl border bg-muted/30 px-4 py-3 text-sm transition-colors hover:bg-muted/45"
                   >
-                    <span
-                      className={cn(
-                        "absolute right-4 top-3 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums",
-                        trackOccupancyClasses(track.teams_registered, track.team_limit),
-                      )}
-                    >
-                      {track.teams_registered}/{track.team_limit}
-                    </span>
-                    <span className="font-medium leading-snug">{track.title}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="min-w-0 flex-1 font-medium leading-snug">
+                        {track.title}
+                      </span>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums",
+                          trackOccupancyClasses(track.teams_registered, track.team_limit),
+                        )}
+                      >
+                        {track.teams_registered}/{track.team_limit}
+                      </span>
+                    </div>
                     <p className="text-muted-foreground mt-0.5 text-xs">
                       Свободно: {track.seats_available}
                     </p>
@@ -148,14 +152,14 @@ export function EventCard({ event }: { event: ApiSchemas["EventCard"] }) {
   return (
     <article
       className={cn(
-        "relative w-full max-w-none rounded-2xl border bg-card p-4 pr-24 pt-4 shadow-sm transition-shadow",
+        "w-full max-w-none rounded-2xl border bg-card p-4 shadow-sm transition-shadow",
         "hover:shadow-md dark:shadow-none",
         cardStatus === "active"
           ? "border-border hover:border-violet-300/60 dark:hover:border-violet-500/40"
           : "border-border",
       )}
     >
-      <div className="absolute right-4 top-4 flex flex-col items-end gap-1.5">
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-1.5">
         <span
           className={cn(
             "rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums",

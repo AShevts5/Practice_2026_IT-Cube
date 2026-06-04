@@ -91,18 +91,21 @@ function EventDetailPage() {
           {tracks.map((track) => (
             <div
               key={track.id}
-              className="relative rounded-2xl border px-4 py-3 pr-24 text-sm"
+              className="rounded-2xl border px-4 py-3 text-sm"
             >
-              <span
-                className={[
-                  "rounded-full border px-3 py-0.5 text-xs font-semibold tabular-nums",
-                  occupancyClasses(track.teams_registered, track.team_limit),
-                  "absolute right-4 top-3",
-                ].join(" ")}
-              >
-                {track.teams_registered}/{track.team_limit}
-              </span>
-              <span className="font-medium leading-snug">{track.title}</span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="min-w-0 flex-1 font-medium leading-snug">
+                  {track.title}
+                </span>
+                <span
+                  className={[
+                    "shrink-0 rounded-full border px-3 py-0.5 text-xs font-semibold tabular-nums",
+                    occupancyClasses(track.teams_registered, track.team_limit),
+                  ].join(" ")}
+                >
+                  {track.teams_registered}/{track.team_limit}
+                </span>
+              </div>
               <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">
                 {track.description}
               </p>

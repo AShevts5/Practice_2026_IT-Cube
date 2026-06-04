@@ -10,8 +10,8 @@ const nav = [
 
 function AdminSidebar() {
   return (
-    <aside className="w-56 shrink-0">
-      <nav className="flex flex-col gap-1">
+    <aside className="w-full shrink-0 lg:w-56">
+      <nav className="flex flex-row flex-wrap gap-1 lg:flex-col">
         {nav.map((item) => (
           <NavLink
             key={item.to}

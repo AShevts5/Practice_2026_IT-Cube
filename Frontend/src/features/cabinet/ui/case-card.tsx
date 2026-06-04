@@ -25,7 +25,7 @@ export function CaseCard({
       disabled={full && !selected}
       onClick={onSelect}
       className={cn(
-        "group relative w-full max-w-none rounded-2xl border bg-card p-4 pr-16 pt-4 text-left transition-all",
+        "group w-full max-w-none rounded-2xl border bg-card p-4 text-left transition-all",
         "shadow-sm hover:shadow-md dark:shadow-none",
         "disabled:cursor-not-allowed disabled:opacity-50",
         selected
@@ -33,10 +33,14 @@ export function CaseCard({
           : "border-border hover:border-border/90",
       )}
     >
-      <span className="absolute right-4 top-4 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-        {occupied}/{limit}
-      </span>
-      <h3 className="text-base font-semibold leading-snug">{catalog.title}</h3>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <h3 className="min-w-0 flex-1 text-base font-semibold leading-snug">
+          {catalog.title}
+        </h3>
+        <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+          {occupied}/{limit}
+        </span>
+      </div>
       <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-snug">
         {catalog.description}
       </p>

@@ -23,7 +23,7 @@ export function CabinetSidebar() {
   const canManage = team?.can_manage ?? false;
 
   return (
-    <aside className="w-56 shrink-0">
+    <aside className="w-full shrink-0 lg:w-56">
       <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50/80 px-3 py-2.5 dark:border-blue-500/25 dark:bg-blue-500/10">
         <p className="text-[10px] font-semibold tracking-wider text-blue-600/80 uppercase dark:text-blue-300/80">
           Мероприятие
@@ -33,7 +33,7 @@ export function CabinetSidebar() {
         </p>
       </div>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-row flex-wrap gap-1 lg:flex-col">
         {CABINET_NAV.map((item) => {
           const Icon = item.icon;
           const isCases = item.to === ROUTES.CABINET_CHANGE_CASE;
