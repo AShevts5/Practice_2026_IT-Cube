@@ -39,4 +39,15 @@ export const authService = {
         return publicFetchClient.POST("/auth/team/otp/verify", { body });
     }
   },
+
+  async forgotPassword(body: ApiSchemas["ForgotPasswordRequest"]) {
+    return publicFetchClient.POST("/auth/forgot-password", { body });
+  },
+
+  async resetPassword(token: string, body: ApiSchemas["ResetPasswordRequest"]) {
+    return publicFetchClient.POST("/auth/reset-password/{token}", {
+      params: { path: { token } },
+      body,
+    });
+  },
 };

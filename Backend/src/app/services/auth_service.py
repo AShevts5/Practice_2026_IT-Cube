@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.exceptions import UnauthorizedError, ValidationError
-from app.core.security import create_access_token, verify_password
+from app.core.security import (
+    create_access_token,
+    create_password_reset_token,
+    decode_password_reset_token,
+    hash_password,
+    verify_password,
+)
 from app.db.models.admin_user import AdminUser
 from app.db.models.captain import Captain
 from app.db.models.otp_challenge import OtpChallenge, OtpChannel, OtpPurpose
@@ -202,6 +208,92 @@ class AuthService:
             raise ValidationError("Неверный или просроченный код подтверждения")
         token = create_access_token(str(challenge.subject_id), "admin")
         return TokenResponse(access_token=token)
+
+    async def request_password_reset(self, email: str) -> None:
+        normalized = email.strip().lower()
+        account = await self._find_account_for_password_reset(normalized)
+        if account is None:
+            return
+
+        token = create_password_reset_token(account["id"], account["role"])
+        reset_url = (
+            f"{settings.frontend_base_url.rstrip('/')}/reset-password/{token}"
+        )
+        subject = "Восстановление пароля — platformhackathons.ru"
+        body = (
+            "Вы запросили сброс пароля на platformhackathons.ru.\n\n"
+            f"Перейдите по ссылке (действует {settings.password_reset_ttl_hours} ч.):\n"
+            f"{reset_url}\n\n"
+            "Если вы не запрашивали сброс, проигнорируйте это письмо."
+        )
+        try:
+            await self.email.send(account["email"], subject, body)
+        except Exception as exc:
+            logger.exception(
+                "Password reset email failed: role=%s destination=%s",
+                account["role"],
+                account["email"],
+            )
+            raise ValidationError(
+                "Не удалось отправить письмо. Попробуйте позже или проверьте папку «Спам»."
+            ) from exc
+
+    async def reset_password(self, token: str, password: str) -> None:
+        try:
+            payload = decode_password_reset_token(token)
+        except ValueError as exc:
+            raise ValidationError("Ссылка для сброса пароля недействительна или устарела") from exc
+
+        subject_id = int(payload["sub"])
+        role = payload["role"]
+        password_hash = hash_password(password)
+
+        if role == "admin":
+            admin = await self._get_admin(subject_id)
+            if not admin.is_active:
+                raise ValidationError("Ссылка для сброса пароля недействительна или устарела")
+            admin.password_hash = password_hash
+        elif role == "captain":
+            captain = await self._get_captain(subject_id)
+            if not captain.is_active:
+                raise ValidationError("Ссылка для сброса пароля недействительна или устарела")
+            captain.password_hash = password_hash
+        else:
+            team = await self._get_team(subject_id)
+            team.password_hash = password_hash
+
+    async def _find_account_for_password_reset(
+        self,
+        email: str,
+    ) -> dict[str, str | int] | None:
+        admin_result = await self.db.execute(
+            select(AdminUser).where(
+                AdminUser.email == email,
+                AdminUser.is_active.is_(True),
+            )
+        )
+        admin = admin_result.scalar_one_or_none()
+        if admin is not None:
+            return {"id": admin.id, "role": "admin", "email": admin.email}
+
+        captain_result = await self.db.execute(
+            select(Captain).where(
+                Captain.email == email,
+                Captain.is_active.is_(True),
+            )
+        )
+        captain = captain_result.scalar_one_or_none()
+        if captain is not None:
+            return {"id": captain.id, "role": "captain", "email": captain.email}
+
+        team_result = await self.db.execute(
+            select(Team).where(Team.email == email).order_by(Team.id).limit(1)
+        )
+        team = team_result.scalar_one_or_none()
+        if team is not None:
+            return {"id": team.id, "role": "team", "email": team.email}
+
+        return None
 
     async def _get_challenge(
         self,

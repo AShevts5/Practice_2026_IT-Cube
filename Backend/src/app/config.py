@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     )
     access_token_expire_minutes: int = 30
     password_hash_scheme: str = "bcrypt"
+    password_reset_ttl_hours: int = 24
+    frontend_base_url: str = "http://localhost:5173"
 
     otp_length: int = 6
     otp_ttl_seconds: int = 600

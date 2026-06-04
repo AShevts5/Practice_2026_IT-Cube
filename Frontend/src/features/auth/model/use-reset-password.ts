@@ -1,18 +1,44 @@
+import { authService } from "@/shared/api/services/auth";
+import { asFetchResult, getErrorMessage, parseApiError } from "@/shared/lib/errors";
 import { ROUTES } from "@/shared/model/routes";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
 
-export function useResetPassword(_token: string) {
+export function useResetPassword(token: string) {
   const navigate = useNavigate();
   const [isPending, setIsPending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>();
 
-  const reset = async (_password: string) => {
+  const reset = async (password: string) => {
     setIsPending(true);
-    toast.info("Сброс пароля пока не реализован в API бэкенда");
-    navigate(ROUTES.LOGIN);
-    setIsPending(false);
+    setErrorMessage(undefined);
+
+    try {
+      const response = asFetchResult<{ message?: string }>(
+        await authService.resetPassword(token, { password }),
+      );
+
+      if (response.error || !response.response?.ok) {
+        if (response.response?.status === 422) {
+          const body = await parseApiError(response.response);
+          setErrorMessage(
+            getErrorMessage(body, "Не удалось сменить пароль"),
+          );
+          return;
+        }
+        setErrorMessage("Не удалось сменить пароль");
+        return;
+      }
+
+      toast.success(response.data?.message ?? "Пароль обновлён");
+      navigate(ROUTES.LOGIN);
+    } catch {
+      setErrorMessage("Не удалось сменить пароль");
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  return { reset, isPending, errorMessage: undefined };
-};
+  return { reset, isPending, errorMessage };
+}

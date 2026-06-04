@@ -58,6 +58,7 @@ function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Восстановление пароля"
+      description="Укажите email администратора, капитана или команды — пришлём ссылку для сброса"
       form={<ForgotPasswordForm />}
       footerText={
         <Link to={ROUTES.LOGIN}>Вернуться ко входу</Link>

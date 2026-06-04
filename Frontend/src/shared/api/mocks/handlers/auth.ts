@@ -96,21 +96,26 @@ export const authHandlers = [
   }),
 
   http.post("/auth/forgot-password", async ({ request, response }) => {
-    const body = await request.json();
+    const body = (await request.json()) as ApiSchemas["ForgotPasswordRequest"];
     const user = mockUsers.find((u) => u.email === body.email);
     if (user) {
       resetTokens.set(`reset-${user.id}`, user.id);
     }
-    return response(200).empty();
+    return response(200).json({
+      message:
+        "Если email зарегистрирован, на него отправлена ссылка для сброса пароля",
+    });
   }),
 
   http.post("/auth/reset-password/{token}", async ({ params, request, response }) => {
     const body = (await request.json()) as ApiSchemas["ResetPasswordRequest"];
     const userId = resetTokens.get(params.token);
     if (!userId) {
-      return response(400).json({
-        message: "Недействительная ссылка",
-        code: "INVALID_RESET_TOKEN",
+      return response(422).json({
+        error: {
+          code: "validation_error",
+          message: "Ссылка для сброса пароля недействительна или устарела",
+        },
       });
     }
     const user = mockUsers.find((u) => u.id === userId);
@@ -118,7 +123,7 @@ export const authHandlers = [
       userPasswords.set(user.email, body.password);
       resetTokens.delete(params.token);
     }
-    return response(200).empty();
+    return response(200).json({ message: "Пароль обновлён. Теперь можно войти." });
   }),
 
   http.post("/auth/register", async ({ request, response }) => {

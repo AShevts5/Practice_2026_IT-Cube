@@ -9,6 +9,7 @@ from app.config import settings
 pwd_context = CryptContext(schemes=[settings.password_hash_scheme], deprecated="auto")
 
 ALGORITHM = "HS256"
+PASSWORD_RESET_TYP = "password_reset"
 
 def hash_password(plain: str) -> str:
     return pwd_context.hash(plain)
@@ -59,3 +60,30 @@ def decode_access_token(token: str) -> dict[str, str]:
         return {"sub": sub, "role": role}
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
+
+
+def create_password_reset_token(subject_id: int, role: str) -> str:
+    expire = datetime.now(UTC) + timedelta(hours=settings.password_reset_ttl_hours)
+    payload = {
+        "sub": str(subject_id),
+        "role": role,
+        "typ": PASSWORD_RESET_TYP,
+        "exp": int(expire.timestamp()),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
+
+
+def decode_password_reset_token(token: str) -> dict[str, str]:
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+        if payload.get("typ") != PASSWORD_RESET_TYP:
+            raise JWTError("invalid token type")
+        sub = payload.get("sub")
+        role = payload.get("role")
+        if not isinstance(sub, str) or not isinstance(role, str):
+            raise JWTError("invalid payload")
+        if role not in {"admin", "captain", "team"}:
+            raise JWTError("invalid role")
+        return {"sub": sub, "role": role}
+    except JWTError as exc:
+        raise ValueError("Invalid or expired reset link") from exc

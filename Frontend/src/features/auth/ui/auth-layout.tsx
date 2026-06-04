@@ -10,6 +10,7 @@ import React from "react";
 export function AuthLayout({
   form,
   title,
+  description,
   footerText,
 }: {
   form: React.ReactNode;
@@ -22,6 +23,9 @@ export function AuthLayout({
       <Card className="w-full max-w-[400px] min-w-0">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
+          {description ? (
+            <p className="text-muted-foreground text-sm">{description}</p>
+          ) : null}
         </CardHeader>
         <CardContent>{form}</CardContent>
         {footerText ? (
