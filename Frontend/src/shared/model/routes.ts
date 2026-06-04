@@ -7,6 +7,8 @@ export const ROUTES = {
   EVENT_REGISTER: "/events/:slug/register",
   EVENT_CASE: "/events/:slug/cases/:caseId",
   LOGIN: "/login",
+  OAUTH_CALLBACK: "/auth/callback",
+  OAUTH_COMPLETE: "/auth/oauth/complete",
   VERIFY_2FA: "/verify-2fa",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password/:token",
