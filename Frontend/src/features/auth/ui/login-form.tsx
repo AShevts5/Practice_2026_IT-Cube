@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ROUTES } from "@/shared/model/routes";
 import { Link } from "react-router-dom";
 import { useLogin } from "../model/use-login";
-import { SocialLoginStubs } from "./social-login-stubs";
+import { SocialLoginButtons } from "./social-login-buttons";
 
 const loginSchema = z.object({
   login: z
@@ -39,7 +39,7 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        <SocialLoginStubs />
+        <SocialLoginButtons flow="login" />
         <FormField
           control={form.control}
           name="login"
