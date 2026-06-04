@@ -14,6 +14,8 @@ from app.db.models.team import Team
 from app.integrations.email import SmtpEmailSender
 from app.integrations.sms import get_sms_sender
 from app.schemas.auth import TokenResponse
+from app.schemas.captain import CaptainRegisterRequest
+from app.services.captain_service import CaptainService
 from app.services.otp_service import OtpService
 
 logger = logging.getLogger(__name__)
@@ -86,6 +88,24 @@ class AuthService:
         token = create_access_token(str(challenge.subject_id), "team")
         return TokenResponse(access_token=token)
 
+    _CAPTAIN_OTP_PURPOSES = (OtpPurpose.CAPTAIN_LOGIN, OtpPurpose.CAPTAIN_REGISTER)
+
+    async def start_captain_register(self, data: CaptainRegisterRequest) -> dict:
+        captain = await CaptainService(self.db).create_pending_registration(data)
+        challenge, plain = await self.otp.create_challenge(
+            purpose=OtpPurpose.CAPTAIN_REGISTER,
+            channel=OtpChannel.EMAIL,
+            subject_type="captain",
+            subject_id=captain.id,
+            destination=captain.email,
+        )
+        await self._send_otp(challenge, plain)
+        return {
+            "challenge_id": challenge.id,
+            "channel": challenge.channel.value,
+            "message": "Код отправлен на email для подтверждения регистрации",
+        }
+
     async def start_captain_login(self, login: str, password: str) -> dict:
         email = login.strip().lower()
         result = await self.db.execute(
@@ -110,13 +130,15 @@ class AuthService:
         }
 
     async def resend_captain_otp(self, challenge_id: int, *, channel: str) -> dict:
-        challenge = await self._get_challenge(challenge_id, OtpPurpose.CAPTAIN_LOGIN)
+        challenge = await self._get_challenge(challenge_id)
+        if challenge.purpose not in self._CAPTAIN_OTP_PURPOSES:
+            raise ValidationError("Сессия подтверждения не найдена")
         await self._check_resend_allowed(challenge)
         otp_channel = OtpChannel.SMS if channel == "sms" else OtpChannel.EMAIL
         captain = await self._get_captain(challenge.subject_id)
         destination = captain.phone if otp_channel == OtpChannel.SMS else captain.email
         new_challenge, plain = await self.otp.create_challenge(
-            purpose=OtpPurpose.CAPTAIN_LOGIN,
+            purpose=challenge.purpose,
             channel=otp_channel,
             subject_type="captain",
             subject_id=captain.id,
@@ -126,9 +148,13 @@ class AuthService:
         return {"challenge_id": new_challenge.id, "channel": new_challenge.channel.value}
 
     async def verify_captain_otp(self, challenge_id: int, code: str) -> TokenResponse:
-        challenge = await self._get_challenge(challenge_id, OtpPurpose.CAPTAIN_LOGIN)
+        challenge = await self._get_challenge(challenge_id)
+        if challenge.purpose not in self._CAPTAIN_OTP_PURPOSES:
+            raise ValidationError("Сессия подтверждения не найдена")
         if not await self.otp.verify(challenge, code):
             raise ValidationError("Неверный или просроченный код подтверждения")
+        if challenge.purpose == OtpPurpose.CAPTAIN_REGISTER:
+            await CaptainService(self.db).activate(challenge.subject_id)
         token = create_access_token(str(challenge.subject_id), "captain")
         return TokenResponse(access_token=token)
 
@@ -177,13 +203,15 @@ class AuthService:
         token = create_access_token(str(challenge.subject_id), "admin")
         return TokenResponse(access_token=token)
 
-    async def _get_challenge(self, challenge_id: int, purpose: OtpPurpose) -> OtpChallenge:
-        result = await self.db.execute(
-            select(OtpChallenge).where(
-                OtpChallenge.id == challenge_id,
-                OtpChallenge.purpose == purpose,
-            )
-        )
+    async def _get_challenge(
+        self,
+        challenge_id: int,
+        purpose: OtpPurpose | None = None,
+    ) -> OtpChallenge:
+        stmt = select(OtpChallenge).where(OtpChallenge.id == challenge_id)
+        if purpose is not None:
+            stmt = stmt.where(OtpChallenge.purpose == purpose)
+        result = await self.db.execute(stmt)
         challenge = result.scalar_one_or_none()
         if challenge is None:
             raise ValidationError("Сессия подтверждения не найдена")
