@@ -10,6 +10,9 @@ Push-Location (Join-Path $Root "Frontend")
 try {
   $env:DOCKER_BUILDKIT = "1"
   docker build -t $ImageTag --build-arg VITE_API_BASE_URL=/api/v1 .
+  if ($LASTEXITCODE -ne 0) {
+    throw "docker build failed with exit code $LASTEXITCODE"
+  }
   $tar = Join-Path $env:TEMP "org-frontend.tar"
   docker save $ImageTag -o $tar
   Write-Host "→ scp $tar → ${VpsHost}:/tmp/org-frontend.tar"

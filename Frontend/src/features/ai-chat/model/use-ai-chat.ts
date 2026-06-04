@@ -1,4 +1,4 @@
-import { aiChatService, type AiChatMessage } from "@/shared/api/services/ai-chat";
+import { aiChatService, type AiChatMessage } from "@/shared/api/services/ai_chat";
 import { asFetchResult, getErrorMessage, parseApiError } from "@/shared/lib/errors";
 import { useCallback, useEffect, useState } from "react";
 import {
