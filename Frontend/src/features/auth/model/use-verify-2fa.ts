@@ -9,7 +9,7 @@ import { useState } from "react";
 export function useVerify2fa() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { otpChallenge, authTarget, login } = useSession();
+  const { otpChallenge, authTarget, otpFlow, login } = useSession();
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -34,7 +34,7 @@ export function useVerify2fa() {
       }
 
       login(response.data.access_token);
-      toast.success("Вход выполнен");
+      toast.success(otpFlow === "register" ? "Аккаунт капитана создан" : "Вход выполнен");
 
       if (authTarget === "captain") {
         const profile = await fetchCaptainProfile();
@@ -61,5 +61,6 @@ export function useVerify2fa() {
     errorMessage,
     hasChallenge: Boolean(otpChallenge),
     channel: otpChallenge?.channel ?? "email",
+    flow: otpFlow ?? otpChallenge?.flow ?? "login",
   };
 }
