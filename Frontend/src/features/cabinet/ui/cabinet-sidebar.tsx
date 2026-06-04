@@ -57,7 +57,7 @@ export function CabinetSidebar() {
               <span
                 key={item.to}
                 className="text-muted-foreground flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm opacity-45"
-                title="Доступно только капитану при открытой регистрации"
+                title="Доступно только капитану команды"
               >
                 <Icon className="size-4 shrink-0" />
                 {item.label}
