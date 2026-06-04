@@ -8,7 +8,6 @@ import { hasTeamCabinetAccess, isGuest, isCaptain } from "@/shared/model/viewer-
 import { cn } from "@/shared/lib/css";
 import { Badge } from "@/shared/ui/kit/badge";
 import { Button } from "@/shared/ui/kit/button";
-import { Card, CardContent } from "@/shared/ui/kit/card";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { KeywordTags } from "@/shared/ui/keyword-tags.tsx";
 import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
@@ -71,7 +70,7 @@ function CaseDetailPage() {
   const registerPath = pathTo(ROUTES.EVENT_REGISTER, { slug });
 
   return (
-    <article>
+    <article className="w-full min-w-0">
       <PageHeader
         title={track.title}
         description={event.title}
@@ -101,19 +100,19 @@ function CaseDetailPage() {
         </span>
       </div>
 
-      <Card size="sm" className="mb-6 gap-4 py-4">
-        <CardContent className="flex flex-col gap-3 pt-0">
-          <p className="text-sm font-semibold">Описание кейса</p>
-          {track.description ? (
-            <p className="text-muted-foreground text-sm leading-relaxed">{track.description}</p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Описание кейса будет опубликовано организаторами.
-            </p>
-          )}
-          <KeywordTags keywords={track.keywords} />
-        </CardContent>
-      </Card>
+      <div className="border-border bg-card mb-6 w-full min-w-0 space-y-3 rounded-2xl border p-4 shadow-sm sm:p-6 dark:bg-card/50 dark:shadow-none">
+        <p className="text-sm font-semibold">Описание кейса</p>
+        {track.description ? (
+          <p className="text-muted-foreground w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere]">
+            {track.description}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Описание кейса будет опубликовано организаторами.
+          </p>
+        )}
+        <KeywordTags keywords={track.keywords} />
+      </div>
 
       {viewerRole === "admin" ? (
         <Button asChild variant="secondary">
