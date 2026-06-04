@@ -5,7 +5,7 @@ import { AuthLayout } from "./ui/auth-layout";
 import { Verify2faForm } from "./ui/verify-2fa-form";
 
 function Verify2faPage() {
-  const { otpChallenge, isAuthenticated, session } = useSession();
+  const { otpChallenge, otpFlow, isAuthenticated, session } = useSession();
 
   if (isAuthenticated) {
     return (
@@ -24,9 +24,11 @@ function Verify2faPage() {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
+  const flow = otpFlow ?? otpChallenge?.flow ?? "login";
+
   return (
     <AuthLayout
-      title="Подтверждение входа"
+      title={flow === "register" ? "Подтверждение регистрации" : "Подтверждение входа"}
       form={<Verify2faForm />}
     />
   );
