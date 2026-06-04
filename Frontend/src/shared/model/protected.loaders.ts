@@ -7,7 +7,7 @@ async function ensureAuth() {
   const token = useSession.getState().getAccessToken();
 
   if (!token) {
-    useSession.getState().logout();
+    useSession.getState().logout({ redirectTo: false });
     return redirect(ROUTES.LOGIN);
   }
 

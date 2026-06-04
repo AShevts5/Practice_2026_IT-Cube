@@ -15,6 +15,7 @@ import {
 } from "@/shared/model/protected.loaders.ts";
 import { CaptainOnlyRoute, ProtectedRoute, RoleRoute } from "@/shared/model/protected.tsx";
 import { lazyPage } from "@/shared/lib/lazy-page.ts";
+import { bindRouter } from "@/shared/lib/router-ref.ts";
 
 export const router = createBrowserRouter([
   {
@@ -180,3 +181,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+bindRouter(router);

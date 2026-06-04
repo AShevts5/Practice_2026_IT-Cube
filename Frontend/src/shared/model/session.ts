@@ -1,7 +1,15 @@
+import { queryClient } from "@/shared/api/query-client";
+import { navigateReplace } from "@/shared/lib/router-ref";
+import { ROUTES } from "@/shared/model/routes";
 import { createGStore } from "create-gstore";
 import { jwtDecode } from "jwt-decode";
 import { useMemo, useState } from "react";
 import { getViewerRole, type ViewerRole } from "./viewer-role.ts";
+
+export type LogoutOptions = {
+  /** Куда перейти после выхода. `false` — остаться на текущем URL (для loader redirect). */
+  redirectTo?: string | false;
+};
 
 export type UserRole = "team" | "admin" | "captain";
 export type AuthTarget = "team" | "admin" | "captain";
@@ -51,10 +59,17 @@ export const useSession = createGStore(() => {
     clearOtpChallenge();
   };
 
-  const logout = () => {
+  const logout = (options?: LogoutOptions) => {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     clearOtpChallenge();
+    void queryClient.clear();
+
+    if (options?.redirectTo === false) {
+      return;
+    }
+
+    navigateReplace(options?.redirectTo ?? ROUTES.HOME);
   };
 
   const setOtpChallenge = (
@@ -100,7 +115,7 @@ export const useSession = createGStore(() => {
       return null;
     }
     if (session.exp * 1000 <= Date.now()) {
-      logout();
+      logout({ redirectTo: false });
       return null;
     }
     return token;

@@ -29,9 +29,8 @@ export async function handleApiErrorResponse(
   switch (response.status) {
     case 401: {
       if (!isAuthRequest(request) && useSession.getState().session) {
-        useSession.getState().logout();
+        useSession.getState().logout({ redirectTo: ROUTES.LOGIN });
         toast.error("Сессия истекла. Войдите снова.");
-        window.location.assign(ROUTES.LOGIN);
       }
       break;
     }
