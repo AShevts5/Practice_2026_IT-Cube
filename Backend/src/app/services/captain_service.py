@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, UnauthorizedError
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import hash_password, verify_password
 from app.db.models.captain import Captain
 from app.schemas.captain import CaptainProfileSchema, CaptainRegisterRequest
 
@@ -21,21 +21,39 @@ class CaptainService:
             team_id=captain.team_id,
         )
 
-    async def register(self, data: CaptainRegisterRequest) -> str:
+    async def create_pending_registration(self, data: CaptainRegisterRequest) -> Captain:
         email = str(data.email).lower()
-        existing = await self.db.execute(select(Captain).where(Captain.email == email))
-        if existing.scalar_one_or_none():
-            raise ConflictError("Капитан с таким email уже зарегистрирован")
+        result = await self.db.execute(select(Captain).where(Captain.email == email))
+        existing = result.scalar_one_or_none()
+        if existing is not None:
+            if existing.is_active:
+                raise ConflictError("Капитан с таким email уже зарегистрирован")
+            existing.password_hash = hash_password(data.password)
+            existing.full_name = data.full_name.strip()
+            existing.phone = data.phone
+            await self.db.flush()
+            return existing
 
         captain = Captain(
             email=email,
             password_hash=hash_password(data.password),
             full_name=data.full_name.strip(),
             phone=data.phone,
+            is_active=False,
         )
         self.db.add(captain)
         await self.db.flush()
-        return create_access_token(str(captain.id), "captain")
+        return captain
+
+    async def activate(self, captain_id: int) -> Captain:
+        captain = await self.get_by_id(captain_id)
+        if captain is None:
+            raise UnauthorizedError("Капитан не найден")
+        if captain.is_active:
+            raise ConflictError("Аккаунт уже активирован")
+        captain.is_active = True
+        await self.db.flush()
+        return captain
 
     async def get_profile(self, captain: Captain) -> CaptainProfileSchema:
         return self._to_profile(captain)
