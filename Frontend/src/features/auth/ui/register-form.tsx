@@ -15,6 +15,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isValidRuPhone, normalizeRuPhone, RU_PHONE_ERROR } from "@/shared/lib/phone";
 import { useRegister } from "../model/use-register";
+import { SocialLoginButtons } from "./social-login-buttons";
 
 const registerSchema = z
   .object({
@@ -49,6 +50,7 @@ export function RegisterForm() {
   return (
     <Form {...form}>
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <SocialLoginButtons flow="register" />
         <FormField
           control={form.control}
           name="full_name"
