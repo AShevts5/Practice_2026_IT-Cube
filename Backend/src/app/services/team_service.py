@@ -34,7 +34,7 @@ class TeamService:
             track_title=full_team.track.title,
             track_id=full_team.track_id,
             can_edit=registration_open,
-            can_manage=registration_open and is_captain,
+            can_manage=is_captain,
         )
 
     async def update_cabinet(self, team: Team, data: TeamUpdateSchema) -> TeamCabinetSchema:
