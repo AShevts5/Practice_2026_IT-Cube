@@ -105,6 +105,19 @@ components:
         token_type:
           type: string
 
+    OAuthCompleteRequest:
+      type: object
+      required: [signup_token, full_name, phone]
+      properties:
+        signup_token:
+          type: string
+        full_name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        phone:
+          type: string
+
     EventStatus:
       type: string
       enum:
@@ -693,6 +706,24 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+
+  /auth/oauth/complete:
+    post:
+      operationId: oauthComplete
+      tags: [auth-oauth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuthCompleteRequest"
       responses:
         "200":
           description: OK
