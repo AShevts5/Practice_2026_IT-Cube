@@ -126,7 +126,16 @@ function CabinetEditPage() {
                 )}
               />
             ))}
-            <Button type="submit" disabled={mutation.isPending} className="mt-2">
+            {!team.can_edit ? (
+              <p className="text-muted-foreground text-sm">
+                Регистрация закрыта — сохранить изменения нельзя, просмотр данных доступен.
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              disabled={mutation.isPending || !team.can_edit}
+              className="mt-2"
+            >
               Сохранить
             </Button>
           </form>
