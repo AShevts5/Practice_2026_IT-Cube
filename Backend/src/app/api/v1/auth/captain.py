@@ -5,18 +5,16 @@ from app.db.session import get_db
 from app.schemas.auth import LoginRequest, OtpRequest, OtpVerifyRequest, TokenResponse
 from app.schemas.captain import CaptainRegisterRequest
 from app.services.auth_service import AuthService
-from app.services.captain_service import CaptainService
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post("/register", status_code=201)
 async def captain_register(
     body: CaptainRegisterRequest,
     db: AsyncSession = Depends(get_db),
-) -> TokenResponse:
-    token = await CaptainService(db).register(body)
-    return TokenResponse(access_token=token)
+) -> dict:
+    return await AuthService(db).start_captain_register(body)
 
 
 @router.post("/login")
