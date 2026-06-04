@@ -9,8 +9,24 @@ import { pathTo, ROUTES } from "@/shared/model/routes";
 import { Button } from "@/shared/ui/kit/button";
 import { Skeleton } from "@/shared/ui/kit/skeleton";
 import { KeywordTags } from "@/shared/ui/keyword-tags.tsx";
+import type { LucideIcon } from "lucide-react";
 import { ExternalLinkIcon, MessageCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+
+function SectionTitle({
+  children,
+  icon: Icon,
+}: {
+  children: string;
+  icon?: LucideIcon;
+}) {
+  return (
+    <p className="text-foreground flex items-center gap-2 border-b border-border pb-2 text-xs font-bold tracking-[0.14em] uppercase">
+      {Icon ? <Icon className="text-primary size-4 shrink-0" aria-hidden /> : null}
+      {children}
+    </p>
+  );
+}
 
 function MaterialLinkList({
   items,
@@ -104,19 +120,16 @@ function CabinetCaseMaterialsPage() {
         ) : null}
       </div>
 
-      <div className="border-border bg-card space-y-3 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
-        <p className="text-sm font-semibold">Материалы</p>
+      <div className="border-border bg-card space-y-4 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
+        <SectionTitle>Материалы</SectionTitle>
         <MaterialLinkList
           items={materials}
           emptyText="Материалы по кейсу будут опубликованы организаторами."
         />
       </div>
 
-      <div className="border-border bg-card space-y-3 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
-        <p className="flex items-center gap-2 text-sm font-semibold">
-          <MessageCircleIcon className="text-primary size-4" />
-          Чаты
-        </p>
+      <div className="border-border bg-card space-y-4 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
+        <SectionTitle icon={MessageCircleIcon}>Чаты</SectionTitle>
         <MaterialLinkList
           items={chatLinks}
           emptyText="Ссылки на чаты хакатона и менторов будут опубликованы организаторами."
