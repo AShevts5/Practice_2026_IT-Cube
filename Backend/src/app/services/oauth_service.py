@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +45,9 @@ class OAuthService:
             raise ValidationError(f"OAuth {provider_id} не настроен на сервере")
 
         state = create_oauth_state_token(provider_id, flow)
-        url = provider.authorize_url(state, self.callback_uri(provider_id))
+        base = settings.oauth_backend_callback_base.rstrip("/")
+        callback_uri = f"{base}/{provider_id}/callback"
+        url = provider.authorize_url(state, callback_uri)
         return RedirectResponse(url=url, status_code=302)
 
     async def handle_callback(
@@ -82,10 +85,18 @@ class OAuthService:
                 message="Не удалось завершить вход через соцсеть",
             )
 
-        flow: OAuthFlow = state_data["flow"]  # type: ignore[assignment]
-        if flow == "login":
-            return await self._finish_login(provider_id, user_info)
-        return await self._finish_register(provider_id, user_info)
+        flow: OAuthFlow = state_data["flow"]  
+        try:
+            if flow == "login":
+                return await self._finish_login(provider_id, user_info)
+            return await self._finish_register(provider_id, user_info)
+        except (ConflictError, ValidationError) as exc:
+            return self._frontend_redirect(status="error", message=exc.message)
+        except Exception:
+            return self._frontend_redirect(
+                status="error",
+                message="Не удалось завершить вход через соцсеть",
+            )
 
     async def _finish_login(
         self,
