@@ -1,4 +1,5 @@
 from app.db.models.admin_user import AdminUser
+from app.db.models.ai_chat import AiChatMessage, AiChatSession
 from app.db.models.captain import Captain
 from app.db.models.captain_oauth import CaptainOAuthAccount
 from app.db.models.enums import EventStatus
@@ -10,6 +11,8 @@ from app.db.models.track import Track
 
 __all__ = [
     "AdminUser",
+    "AiChatMessage",
+    "AiChatSession",
     "Captain",
     "CaptainOAuthAccount",
     "Event",
