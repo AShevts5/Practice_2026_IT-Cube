@@ -9,6 +9,7 @@ from app.db.base import Base
 class OtpPurpose(str, enum.Enum):
     TEAM_LOGIN = "team_login"
     CAPTAIN_LOGIN = "captain_login"
+    CAPTAIN_REGISTER = "captain_register"
     ADMIN_LOGIN = "admin_login"
 
 
