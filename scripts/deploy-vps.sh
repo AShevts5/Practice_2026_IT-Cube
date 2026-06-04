@@ -28,7 +28,7 @@ deploy_api() {
 deploy_frontend() {
   echo "→ build & up frontend"
   "${COMPOSE[@]}" build frontend
-  "${COMPOSE[@]}" up -d --no-build frontend
+  "${COMPOSE[@]}" up -d --no-build --force-recreate frontend
 }
 
 case "$TARGET" in
