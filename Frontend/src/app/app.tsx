@@ -1,5 +1,6 @@
 import { AppBackground } from "@/shared/ui/app-background.tsx";
 import { AppFooter } from "@/shared/ui/layout/app-footer.tsx";
+import { AiChatWidget } from "@/features/ai-chat";
 import { Outlet } from "react-router-dom";
 
 export function App() {
@@ -12,6 +13,7 @@ export function App() {
         </div>
         <AppFooter />
       </div>
+      <AiChatWidget />
     </div>
   );
 }
