@@ -68,7 +68,7 @@ function CabinetChangeCasePage() {
     : getCaseCatalogItem(String(team.track_id), team.track_title);
 
   return (
-    <div>
+    <div className="w-full min-w-0">
       <CabinetPageHeader
         title="Смена кейса"
         description="Выберите направление, если есть свободные места"

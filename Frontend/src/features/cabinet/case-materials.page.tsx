@@ -47,10 +47,10 @@ function MaterialLinkList({
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 inline-flex items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
+            className="text-primary hover:text-primary/80 inline-flex max-w-full items-start gap-2 text-sm font-medium break-words underline-offset-4 hover:underline [overflow-wrap:anywhere]"
           >
-            <ExternalLinkIcon className="size-4 shrink-0" />
-            {item.label}
+            <ExternalLinkIcon className="mt-0.5 size-4 shrink-0" />
+            <span className="min-w-0">{item.label}</span>
           </a>
         </li>
       ))}
@@ -95,19 +95,21 @@ function CabinetCaseMaterialsPage() {
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       <CabinetPageHeader
         title="Материал кейса"
         description="Материалы по вашему направлению и ссылки на чаты"
       />
 
-      <div className="border-border bg-card space-y-4 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
-        <div>
+      <div className="border-border bg-card w-full min-w-0 space-y-4 rounded-2xl border p-4 shadow-sm sm:p-6 dark:bg-card/50 dark:shadow-none">
+        <div className="w-full min-w-0">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             {catalog.partner}
           </p>
-          <p className="mt-1 text-lg font-semibold leading-snug">{catalog.title}</p>
-          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+          <p className="mt-1 text-lg font-semibold leading-snug break-words [overflow-wrap:anywhere]">
+            {catalog.title}
+          </p>
+          <p className="text-muted-foreground mt-2 w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere]">
             {catalog.description}
           </p>
           <KeywordTags keywords={track?.keywords} className="mt-3" />
@@ -120,7 +122,7 @@ function CabinetCaseMaterialsPage() {
         ) : null}
       </div>
 
-      <div className="border-border bg-card space-y-4 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
+      <div className="border-border bg-card w-full min-w-0 space-y-4 rounded-2xl border p-4 shadow-sm sm:p-6 dark:bg-card/50 dark:shadow-none">
         <SectionTitle>Материалы</SectionTitle>
         <MaterialLinkList
           items={materials}
@@ -128,7 +130,7 @@ function CabinetCaseMaterialsPage() {
         />
       </div>
 
-      <div className="border-border bg-card space-y-4 rounded-2xl border p-6 shadow-sm dark:bg-card/50 dark:shadow-none">
+      <div className="border-border bg-card w-full min-w-0 space-y-4 rounded-2xl border p-4 shadow-sm sm:p-6 dark:bg-card/50 dark:shadow-none">
         <SectionTitle icon={MessageCircleIcon}>Чаты</SectionTitle>
         <MaterialLinkList
           items={chatLinks}

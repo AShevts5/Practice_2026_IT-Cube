@@ -58,7 +58,7 @@ function EventDetailPage() {
   const tracks = event.tracks ?? [];
 
   return (
-    <article>
+    <article className="w-full min-w-0">
       <PageHeader
         title={event.title}
         description={event.description}
@@ -106,7 +106,7 @@ function EventDetailPage() {
                   {track.teams_registered}/{track.team_limit}
                 </span>
               </div>
-              <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">
+              <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug break-words [overflow-wrap:anywhere]">
                 {track.description}
               </p>
             </div>

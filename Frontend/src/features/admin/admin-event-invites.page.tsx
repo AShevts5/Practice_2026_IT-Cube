@@ -11,7 +11,7 @@ function AdminEventInvitesPage() {
   if (!eventId || !Number.isFinite(numericId)) return null;
 
   return (
-    <div>
+    <div className="min-w-0">
       <PageHeader
         title="Инвайт-коды"
         description="Генерация и управление кодами регистрации"

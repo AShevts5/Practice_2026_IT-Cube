@@ -77,7 +77,7 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
   };
 
   return (
-    <div className="border-border space-y-4 rounded-2xl border p-4">
+    <div className="border-border min-w-0 space-y-4 rounded-2xl border p-4">
       <p className="font-medium">Инвайт-коды</p>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -116,9 +116,9 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
       </div>
 
       {generatedCodes.length > 0 ? (
-        <div className="bg-muted/40 rounded-xl p-3">
+        <div className="bg-muted/40 overflow-x-auto rounded-xl p-3">
           <p className="mb-2 text-sm font-medium">Новые коды (сохраните):</p>
-          <ul className="font-mono text-sm">
+          <ul className="font-mono text-sm whitespace-nowrap">
             {generatedCodes.map((code) => (
               <li key={code}>{code}</li>
             ))}
@@ -129,28 +129,34 @@ export function EventInvitesPanel({ eventId }: { eventId: number }) {
       {isPending ? (
         <p className="text-muted-foreground text-sm">Загрузка списка…</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="px-3 py-2 text-left">ID</th>
-              <th className="px-3 py-2 text-left">Инвайт-код</th>
-              <th className="px-3 py-2 text-left">Использован</th>
-              <th className="px-3 py-2 text-left">Создан</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(invites ?? []).map((invite) => (
-              <tr key={invite.id} className="border-t">
-                <td className="px-3 py-2">{invite.id}</td>
-                <td className="px-3 py-2 font-mono">{invite.code ?? "—"}</td>
-                <td className="px-3 py-2">{invite.is_used ? "Да" : "Нет"}</td>
-                <td className="px-3 py-2">
-                  {new Date(invite.created_at).toLocaleDateString("ru-RU")}
-                </td>
+        <div className="-mx-1 overflow-x-auto rounded-xl border sm:mx-0">
+          <table className="w-full min-w-[32rem] text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="px-3 py-2 text-left whitespace-nowrap">ID</th>
+                <th className="px-3 py-2 text-left whitespace-nowrap">Инвайт-код</th>
+                <th className="px-3 py-2 text-left whitespace-nowrap">Использован</th>
+                <th className="px-3 py-2 text-left whitespace-nowrap">Создан</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(invites ?? []).map((invite) => (
+                <tr key={invite.id} className="border-t">
+                  <td className="px-3 py-2 whitespace-nowrap">{invite.id}</td>
+                  <td className="px-3 py-2 font-mono whitespace-nowrap">
+                    {invite.code ?? "—"}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {invite.is_used ? "Да" : "Нет"}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {new Date(invite.created_at).toLocaleDateString("ru-RU")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
