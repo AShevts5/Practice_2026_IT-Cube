@@ -20,7 +20,7 @@ function AdminEventCasesPage() {
   if (!eventId) return null;
 
   return (
-    <div className="min-w-0 w-full">
+    <div>
       <PageHeader
         title="Кейсы мероприятия"
         description="Направления (tracks) задаются при создании события на бэкенде"
@@ -37,12 +37,10 @@ function AdminEventCasesPage() {
           {(event?.tracks ?? []).map((track) => (
             <li
               key={track.id}
-              className="border-border w-full min-w-0 rounded-2xl border px-4 py-3 text-sm"
+              className="border-border rounded-2xl border px-4 py-3 text-sm"
             >
-              <p className="font-medium break-words [overflow-wrap:anywhere]">{track.title}</p>
-              <p className="text-muted-foreground mt-1 break-words [overflow-wrap:anywhere]">
-                {track.description}
-              </p>
+              <p className="font-medium">{track.title}</p>
+              <p className="text-muted-foreground mt-1">{track.description}</p>
               <p className="mt-2 tabular-nums">
                 {track.teams_registered}/{track.team_limit} команд
               </p>

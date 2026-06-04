@@ -34,14 +34,14 @@ export function CaseCard({
       )}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className="min-w-0 flex-1 text-base font-semibold leading-snug break-words [overflow-wrap:anywhere]">
+        <h3 className="min-w-0 flex-1 text-base font-semibold leading-snug">
           {catalog.title}
         </h3>
         <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums">
           {occupied}/{limit}
         </span>
       </div>
-      <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-snug break-words [overflow-wrap:anywhere]">
+      <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-snug">
         {catalog.description}
       </p>
     </button>
