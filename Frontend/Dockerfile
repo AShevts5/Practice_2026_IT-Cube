@@ -12,7 +12,11 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY . .
 
 ARG VITE_API_BASE_URL=/api/v1
+ARG VITE_HACKATHON_CHAT_URL=
+ARG VITE_MENTORS_CHAT_URL=
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_HACKATHON_CHAT_URL=${VITE_HACKATHON_CHAT_URL}
+ENV VITE_MENTORS_CHAT_URL=${VITE_MENTORS_CHAT_URL}
 
 RUN --mount=type=cache,target=/app/node_modules/.vite \
     npm run build:docker
