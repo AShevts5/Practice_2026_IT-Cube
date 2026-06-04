@@ -111,6 +111,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/oauth/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["oauthComplete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/captain/me": {
         parameters: {
             query?: never;
@@ -473,6 +489,11 @@ export interface components {
             access_token: string;
             token_type: string;
         };
+        OAuthCompleteRequest: {
+            signup_token: string;
+            full_name: string;
+            phone: string;
+        };
         EventStatus: "draft" | "published" | "registration_open" | "registration_closed" | "finished";
         EventFormat: "online" | "offline" | "hybrid";
         EventCard: {
@@ -534,7 +555,6 @@ export interface components {
         TeamUpdate: {
             team_name?: string;
             captain_full_name?: string;
-            /** Format: email */
             email?: string;
             phone?: string;
             track_id?: number;
@@ -796,6 +816,29 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OtpVerifyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    oauthComplete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OAuthCompleteRequest"];
             };
         };
         responses: {
