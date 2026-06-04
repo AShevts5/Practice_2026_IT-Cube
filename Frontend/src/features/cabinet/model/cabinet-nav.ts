@@ -24,7 +24,7 @@ export const CABINET_NAV: CabinetNavItem[] = [
   { label: "Личная информация", to: ROUTES.CABINET_EDIT, icon: UserIcon, requiresManage: true },
   { label: "Кейсы", to: ROUTES.CABINET_CHANGE_CASE, icon: LayoutGridIcon, requiresManage: true },
   { label: "История", to: ROUTES.CABINET_HISTORY, icon: ClockIcon },
-  { label: "Материал кейса", icon: BookOpenIcon, disabled: true },
+  { label: "Материал кейса", to: ROUTES.CABINET_CASE_MATERIALS, icon: BookOpenIcon },
   { label: "Загрузка решения", icon: FileUpIcon, disabled: true },
   { label: "Защита", icon: MicIcon, disabled: true },
   { label: "Итоги", icon: TrophyIcon, disabled: true },
