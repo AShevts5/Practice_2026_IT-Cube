@@ -25,7 +25,9 @@ COPY alembic ./alembic
 COPY scripts ./scripts
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh \
+    && sed -i '1s/^\xEF\xBB\xBF//' /docker-entrypoint.sh \
+    && chmod +x /docker-entrypoint.sh
 
 EXPOSE 8000
 
