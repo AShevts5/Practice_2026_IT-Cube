@@ -15,6 +15,7 @@ export const ROUTES = {
   CABINET_EDIT: "/cabinet/edit",
   CABINET_CHANGE_CASE: "/cabinet/change-case",
   CABINET_HISTORY: "/cabinet/history",
+  CABINET_CASE_MATERIALS: "/cabinet/case-materials",
   ADMIN: "/admin",
   ADMIN_EVENTS: "/admin/events",
   ADMIN_EVENT_NEW: "/admin/events/new",
