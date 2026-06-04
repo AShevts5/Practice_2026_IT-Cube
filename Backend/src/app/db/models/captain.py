@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,3 +21,8 @@ class Captain(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     team: Mapped["Team | None"] = relationship("Team", foreign_keys=[team_id])
+    oauth_accounts: Mapped[list["CaptainOAuthAccount"]] = relationship(
+        "CaptainOAuthAccount",
+        back_populates="captain",
+        cascade="all, delete-orphan",
+    )
