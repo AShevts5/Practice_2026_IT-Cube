@@ -24,8 +24,6 @@ class Settings(BaseSettings):
     )
     access_token_expire_minutes: int = 30
     password_hash_scheme: str = "bcrypt"
-    password_reset_ttl_hours: int = 24
-    frontend_base_url: str = "http://localhost:5173"
 
     otp_length: int = 6
     otp_ttl_seconds: int = 600
@@ -57,8 +55,17 @@ class Settings(BaseSettings):
     yandex_client_id: str = ""
     yandex_client_secret: str = ""
 
-    vk_client_id: str = ""
-    vk_client_secret: str = ""
+    llm_enabled: bool = True
+    llm_api_key: str = ""
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_model: str = "gpt-4o-mini"
+    llm_temperature: float = 0.4
+    llm_max_tokens: int = 800
+    llm_timeout_seconds: float = 60.0
+
+    ai_chat_greeting: str = "Приветствую Повелителя своего! Чем могу быть полезен?"
+    ai_chat_max_history: int = 20
+    ai_chat_system_prompt: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:
