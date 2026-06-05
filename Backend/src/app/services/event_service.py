@@ -273,3 +273,34 @@ class EventService:
         event.status = EventStatus.FINISHED
         await self.db.flush()
         return await self._to_admin_schema(event)
+
+    async def delete_event(self, event_id: int) -> None:
+        event = await self._get_event_or_404(event_id)
+        teams_count = 0
+        for track in event.tracks:
+            teams_count += await count_teams_on_track(self.db, track.id)
+        if teams_count > 0:
+            raise ValidationError(
+                "Нельзя удалить мероприятие: есть зарегистрированные команды"
+            )
+        await self.db.delete(event)
+        await self.db.flush()
+
+    async def delete_track(self, event_id: int, track_id: int) -> EventAdminSchema:
+        event = await self._get_event_or_404(event_id)
+        track = next((item for item in event.tracks if item.id == track_id), None)
+        if track is None:
+            raise NotFoundError("Кейс не найден")
+
+        occupied = await count_teams_on_track(self.db, track_id)
+        if occupied > 0:
+            raise ValidationError(
+                f"Нельзя удалить кейс «{track.title}»: есть зарегистрированные команды"
+            )
+
+        if len(event.tracks) <= 1:
+            raise ValidationError("У мероприятия должен остаться хотя бы один кейс")
+
+        await self.db.delete(track)
+        await self.db.flush()
+        return await self._to_admin_schema(await self._get_event_or_404(event_id))

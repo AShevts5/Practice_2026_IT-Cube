@@ -4,12 +4,44 @@ import { PageHeader } from "@/shared/ui/layout/page-header.tsx";
 import { Badge } from "@/shared/ui/kit/badge";
 import { Button } from "@/shared/ui/kit/button";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 function AdminEventsPage() {
+  const queryClient = useQueryClient();
   const { data: events, isPending, isError } = rqClient.useQuery(
     "get",
     "/admin/events",
   );
+
+  const invalidateEvents = () =>
+    queryClient.invalidateQueries(rqClient.queryOptions("get", "/admin/events"));
+
+  const deleteMutation = rqClient.useMutation("delete", "/admin/events/{event_id}", {
+    onSuccess: async () => {
+      toast.success("Мероприятие удалено");
+      await invalidateEvents();
+    },
+    onError: () => toast.error("Не удалось удалить мероприятие"),
+  });
+
+  const handleDelete = (event: { id: number; title: string; tracks: { teams_registered: number }[] }) => {
+    const teamsCount = event.tracks.reduce(
+      (sum, track) => sum + track.teams_registered,
+      0,
+    );
+    if (teamsCount > 0) {
+      toast.error("Нельзя удалить мероприятие с зарегистрированными командами");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Удалить мероприятие «${event.title}»? Это действие нельзя отменить.`,
+    );
+    if (!confirmed) return;
+
+    deleteMutation.mutate({ params: { path: { event_id: event.id } } });
+  };
 
   if (isPending) {
     return <p>Загрузка…</p>;
@@ -68,6 +100,15 @@ function AdminEventsPage() {
                       >
                         Инвайты
                       </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => handleDelete(event)}
+                    >
+                      Удалить
                     </Button>
                   </div>
                 </td>

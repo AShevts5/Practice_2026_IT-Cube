@@ -18,6 +18,7 @@ export function useRegister() {
     password: string;
     full_name: string;
     phone: string;
+    personal_data_consent: boolean;
   }) => {
     setIsPending(true);
     setErrorMessage(undefined);

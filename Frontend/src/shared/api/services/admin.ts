@@ -17,6 +17,18 @@ export const adminService = {
     });
   },
 
+  async deleteEvent(eventId: number) {
+    return fetchClient.DELETE("/admin/events/{event_id}", {
+      params: { path: { event_id: eventId } },
+    });
+  },
+
+  async deleteEventTrack(eventId: number, trackId: number) {
+    return fetchClient.DELETE("/admin/events/{event_id}/tracks/{track_id}", {
+      params: { path: { event_id: eventId, track_id: trackId } },
+    });
+  },
+
   async listTeams(eventId: number) {
     return fetchClient.GET("/admin/teams/events/{event_id}/teams", {
       params: { path: { event_id: eventId } },

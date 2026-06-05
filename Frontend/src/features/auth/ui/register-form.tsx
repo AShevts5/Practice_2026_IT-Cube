@@ -30,6 +30,9 @@ const registerSchema = z
       .min(1, "Пароль обязателен")
       .min(6, "Пароль должен быть не менее 6 символов"),
     confirmPassword: z.string().optional(),
+    personal_data_consent: z.boolean().refine((value) => value, {
+      message: "Необходимо согласие на обработку персональных данных",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],
@@ -39,6 +42,9 @@ const registerSchema = z
 export function RegisterForm() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      personal_data_consent: false,
+    },
   });
 
   const { errorMessage, isPending, register } = useRegister();
@@ -119,6 +125,33 @@ export function RegisterForm() {
                 <PasswordInput {...field} />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="personal_data_consent"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-start gap-3">
+                <FormControl>
+                  <input
+                    type="checkbox"
+                    checked={field.value === true}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                    className="border-input text-primary focus-visible:ring-ring/30 mt-0.5 size-4 shrink-0 rounded border shadow-xs focus-visible:ring-[3px] focus-visible:outline-none"
+                  />
+                </FormControl>
+                <div className="space-y-1">
+                  <FormLabel className="text-foreground text-sm font-normal normal-case tracking-normal">
+                    Я согласен на обработку персональных данных
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </div>
             </FormItem>
           )}
         />

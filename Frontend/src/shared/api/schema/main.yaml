@@ -33,7 +33,7 @@ components:
 
     CaptainRegisterRequest:
       type: object
-      required: [email, password, full_name, phone]
+      required: [email, password, full_name, phone, personal_data_consent]
       properties:
         email:
           type: string
@@ -45,6 +45,9 @@ components:
           type: string
         phone:
           type: string
+        personal_data_consent:
+          type: boolean
+          description: Согласие на обработку персональных данных
 
     CaptainProfile:
       type: object
@@ -1068,6 +1071,43 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/EventUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventAdmin"
+    delete:
+      operationId: deleteAdminEvent
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/events/{event_id}/tracks/{track_id}:
+    delete:
+      operationId: deleteAdminEventTrack
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: track_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
         "200":
           description: OK

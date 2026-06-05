@@ -116,6 +116,35 @@ function AdminEventFormPage() {
     },
   );
 
+  const deleteMutation = rqClient.useMutation("delete", "/admin/events/{event_id}", {
+    onSuccess: async () => {
+      toast.success("Мероприятие удалено");
+      await invalidateEvents();
+      navigate(ROUTES.ADMIN_EVENTS);
+    },
+    onError: () => toast.error("Не удалось удалить мероприятие"),
+  });
+
+  const handleDeleteEvent = () => {
+    if (!event || !Number.isFinite(numericId)) return;
+
+    const teamsCount = event.tracks.reduce(
+      (sum, track) => sum + track.teams_registered,
+      0,
+    );
+    if (teamsCount > 0) {
+      toast.error("Нельзя удалить мероприятие с зарегистрированными командами");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Удалить мероприятие «${event.title}»? Это действие нельзя отменить.`,
+    );
+    if (!confirmed) return;
+
+    deleteMutation.mutate({ params: { path: { event_id: numericId } } });
+  };
+
   const buildEventMeta = () => {
     const parsedMinAge = minAge.trim() ? Number(minAge) : null;
     if (minAge.trim() && (!Number.isInteger(parsedMinAge) || parsedMinAge! < 0)) {
@@ -342,6 +371,15 @@ function AdminEventFormPage() {
               }
             >
               Завершить
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              disabled={deleteMutation.isPending}
+              onClick={handleDeleteEvent}
+            >
+              Удалить
             </Button>
           </>
         ) : null}
